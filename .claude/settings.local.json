@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__ida-pro-mcp__server_health",
+      "mcp__ida-pro-mcp__server_warmup",
+      "mcp__ida-pro-mcp__survey_binary",
+      "mcp__ida-pro-mcp__find_regex",
+      "mcp__ida-pro-mcp__func_query",
+      "mcp__ida-pro-mcp__get_bytes",
+      "mcp__ida-pro-mcp__list_globals",
+      "Bash(find /c/Users/Snypez -maxdepth 3 -iname \"*strap*\" -type d 2>/dev/null)",
+      "Read(//c/Users/Snypez/**)",
+      "Bash(dotnet build *)",
+      "Bash(ls -la \"/c/Users/Snypez/Desktop/Voidstrap-Build\" 2>/dev/null *)",
+      "Read(//c/Users/Snypez/Desktop/Voidstrap-Build/**)",
+      "Bash(dotnet publish *)",
+      "Bash(ls -la \"/c/Users/Snypez/Desktop/Voidstrap-Build\")",
+      "Bash(tasklist //FI \"IMAGENAME eq Claudestrap.exe\")",
+      "Bash(powershell -NoProfile -Command \"Get-Process Claudestrap -ErrorAction SilentlyContinue | Select-Object Id,Path\")",
+      "PowerShell(dotnet build \"C:\\\\Users\\\\Snypez\\\\Documents\\\\cLA\\\\Bloxstrap\\\\Claudestrap.csproj\" -c Release 2>&1)",
+      "PowerShell(dotnet publish \"C:\\\\Users\\\\Snypez\\\\Documents\\\\cLA\\\\Bloxstrap\\\\Claudestrap.csproj\" -c Release --no-build 2>&1)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\Snypez\\\\Documents\\\\cLA\" -Recurse -Depth 2 -Filter \"*.xaml\" -ErrorAction SilentlyContinue)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\Snypez\\\\Documents\\\\cLA\" -Recurse -Depth 2 -Filter \"*.resx\" -ErrorAction SilentlyContinue)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\Snypez\\\\Documents\\\\cLA\" -Recurse -Depth 2 -Filter \"*.json\" -ErrorAction SilentlyContinue)",
+      "PowerShell(dotnet publish \"C:\\\\Users\\\\Snypez\\\\Documents\\\\cLA\\\\Bloxstrap\\\\Claudestrap.csproj\" -c Release 2>&1)",
+      "PowerShell(Stop-Process -Name \"Claudestrap\" -Force -ErrorAction SilentlyContinue)"
+    ]
+  }
+}

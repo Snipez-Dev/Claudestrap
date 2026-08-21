@@ -1,0 +1,43 @@
+{
+    "profiles": {
+        "Claudestrap (Launch)": {
+            "commandName": "Project"
+        },
+        "Claudestrap (Quiet Launch)": {
+            "commandName": "Project",
+            "commandLineArgs": "-quiet"
+        },
+        "Claudestrap (Install)": {
+            "commandName": "Project",
+            "commandLineArgs": "-install"
+        },
+        "Claudestrap (Uninstall)": {
+            "commandName": "Project",
+            "commandLineArgs": "-uninstall"
+        },
+        "Claudestrap (Quiet Uninstall)": {
+            "commandName": "Project",
+            "commandLineArgs": "-uninstall -quiet"
+        },
+        "Claudestrap (Menu)": {
+            "commandName": "Project",
+            "commandLineArgs": "-menu"
+        },
+        "Claudestrap (Deeplink)": {
+            "commandName": "Project",
+            "commandLineArgs": "-player \"roblox://experiences/start?placeId=286090429\""
+        },
+        "Claudestrap (Studio Launch)": {
+            "commandName": "Project",
+            "commandLineArgs": "-studio"
+        },
+        "Claudestrap (Watcher)": {
+            "commandName": "Project",
+            "commandLineArgs": "-watcher"
+        },
+        "Claudestrap (Bloxshade)": {
+            "commandName": "Project",
+            "commandLineArgs": "-bloxshade"
+        }
+    }
+}
