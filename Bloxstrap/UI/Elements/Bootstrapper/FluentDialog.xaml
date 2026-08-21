@@ -1,0 +1,245 @@
+<base:WpfUiWindow
+    x:Class="Claudestrap.UI.Elements.Bootstrapper.FluentDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:base="clr-namespace:Claudestrap.UI.Elements.Base"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:po="http://schemas.microsoft.com/winfx/2006/xaml/presentation/options"
+    xmlns:resources="clr-namespace:Claudestrap.Resources"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    xmlns:vms="clr-namespace:Claudestrap.UI.ViewModels.Bootstrapper"
+    Title="Claudestrap"
+    Width="600"
+    Height="340"
+    MinWidth="0"
+    MinHeight="0"
+    AllowsTransparency="True"
+    Background="Transparent"
+    ExtendsContentIntoTitleBar="True"
+    ResizeMode="NoResize"
+    WindowStyle="None"
+    WindowStartupLocation="CenterScreen"
+    Closing="UiWindow_Closing"
+    TextOptions.TextFormattingMode="Display"
+    TextOptions.TextRenderingMode="ClearType"
+    FontFamily="Poppins, Inter, Segoe UI"
+    mc:Ignorable="d"
+    d:DataContext="{d:DesignInstance vms:FluentDialogViewModel, IsDesignTimeCreatable=True}">
+
+    <Window.TaskbarItemInfo>
+        <TaskbarItemInfo
+            ProgressState="{Binding TaskbarProgressState}"
+            ProgressValue="{Binding TaskbarProgressValue}" />
+    </Window.TaskbarItemInfo>
+
+    <Window.Resources>
+        <!-- ============ Palette ============ -->
+        <SolidColorBrush x:Key="WindowBg"         po:Freeze="True" Color="#111111" />
+        <SolidColorBrush x:Key="BackgroundBase"   po:Freeze="True" Color="#121212" />
+        <SolidColorBrush x:Key="SecondaryBg"      po:Freeze="True" Color="#1A1A1A" />
+        <SolidColorBrush x:Key="GridColor"        po:Freeze="True" Color="#232323" />
+        <SolidColorBrush x:Key="TextPrimary"      po:Freeze="True" Color="#E7E7E7" />
+        <SolidColorBrush x:Key="TextSecondary"    po:Freeze="True" Color="#BDBDBD" />
+        <SolidColorBrush x:Key="TextDescription"  po:Freeze="True" Color="#5E5E5E" />
+        <SolidColorBrush x:Key="IconColor"        po:Freeze="True" Color="#707070" />
+        <SolidColorBrush x:Key="IconHover"        po:Freeze="True" Color="#BFBFBF" />
+        <SolidColorBrush x:Key="LineColor"        po:Freeze="True" Color="#2A2A2A" />
+        <SolidColorBrush x:Key="OrText"           po:Freeze="True" Color="#555555" />
+        <SolidColorBrush x:Key="ButtonBase"       po:Freeze="True" Color="#4C4C4C" />
+        <SolidColorBrush x:Key="ButtonText"       po:Freeze="True" Color="#D6D6D6" />
+        <SolidColorBrush x:Key="BorderSubtle"     po:Freeze="True" Color="#0AFFFFFF" />
+
+        <SolidColorBrush x:Key="VersionBg"        po:Freeze="True" Color="#4F4F4F" />
+        <SolidColorBrush x:Key="VersionText"      po:Freeze="True" Color="#EAEAEA" />
+        <SolidColorBrush x:Key="CommitBg"         po:Freeze="True" Color="#2B2B2B" />
+        <SolidColorBrush x:Key="CommitText"       po:Freeze="True" Color="#6D6D6D" />
+
+        <SolidColorBrush x:Key="ProgressTrack"    po:Freeze="True" Color="#252525" />
+
+        <!-- ============ Dot Pattern (dots centered inside each tile so the rounded
+             corners of the shell don't chop off partial edge dots) ============ -->
+        <DrawingBrush x:Key="DotPattern" po:Freeze="True"
+                      TileMode="Tile"
+                      Viewport="0,0,20,20" ViewportUnits="Absolute"
+                      Stretch="None">
+            <DrawingBrush.Drawing>
+                <GeometryDrawing>
+                    <GeometryDrawing.Brush>
+                        <SolidColorBrush Color="#5A5A5A" Opacity="0.7" />
+                    </GeometryDrawing.Brush>
+                    <GeometryDrawing.Geometry>
+                        <EllipseGeometry Center="10,10" RadiusX="1" RadiusY="1" />
+                    </GeometryDrawing.Geometry>
+                </GeometryDrawing>
+            </DrawingBrush.Drawing>
+        </DrawingBrush>
+
+        <!-- ============ Progress bar fill (silver metallic effect) ============ -->
+        <LinearGradientBrush x:Key="ProgressFill" po:Freeze="True" StartPoint="0,0.5" EndPoint="1,0.5">
+            <GradientStop Offset="0.00" Color="#9E9E9E" />
+            <GradientStop Offset="0.25" Color="#D6D6D6" />
+            <GradientStop Offset="0.50" Color="#F0F0F0" />
+            <GradientStop Offset="0.75" Color="#D0D0D0" />
+            <GradientStop Offset="1.00" Color="#A8A8A8" />
+        </LinearGradientBrush>
+
+        <!-- ============ Titlebar icon button (Settings/Min/Close) ============ -->
+        <Style x:Key="TitleIconStyle" TargetType="Button">
+            <Setter Property="Foreground" Value="{StaticResource IconColor}" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Width" Value="24" />
+            <Setter Property="Height" Value="24" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}" CornerRadius="4">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Foreground" Value="{StaticResource IconHover}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- ============ Slim progress bar (rounded, silver) ============ -->
+        <Style x:Key="SlimProgressStyle" TargetType="{x:Type ui:ProgressBar}">
+            <Setter Property="Background" Value="{StaticResource ProgressTrack}" />
+            <Setter Property="Foreground" Value="{StaticResource ProgressFill}" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Height" Value="8" />
+            <Setter Property="CornerRadius" Value="4" />
+        </Style>
+
+        <!-- ============ Badges ============ -->
+        <Style x:Key="VersionBadgeStyle" TargetType="Border">
+            <Setter Property="Background" Value="{StaticResource VersionBg}" />
+            <Setter Property="Width" Value="52" />
+            <Setter Property="Height" Value="22" />
+            <Setter Property="CornerRadius" Value="11" />
+        </Style>
+        <Style x:Key="CommitBadgeStyle" TargetType="Border">
+            <Setter Property="Background" Value="{StaticResource CommitBg}" />
+            <Setter Property="MinWidth" Value="100" />
+            <Setter Property="MaxWidth" Value="190" />
+            <Setter Property="Padding" Value="10,0" />
+            <Setter Property="Height" Value="22" />
+            <Setter Property="CornerRadius" Value="11" />
+        </Style>
+    </Window.Resources>
+
+    <Border Background="{StaticResource BackgroundBase}"
+            CornerRadius="12"
+            SnapsToDevicePixels="True"
+            BorderBrush="{StaticResource BorderSubtle}"
+            BorderThickness="1">
+
+        <Grid MouseDown="Header_MouseDown" Background="Transparent">
+            <!-- Kept for BackgroundManager compatibility with the existing code-behind. -->
+            <Image x:Name="BackgroundImage" Visibility="Collapsed" />
+
+            <!-- CacheMode intentionally omitted: BitmapCache locked the tiled brush at
+                 the first layout pass and left the bottom band undrawn. -->
+            <Border Background="{StaticResource DotPattern}"
+                    CornerRadius="12"
+                    IsHitTestVisible="False" />
+
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="44" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <!-- =============== TOP BAR (edge-to-edge) =============== -->
+                <Grid Grid.Row="0" Background="Transparent">
+                    <StackPanel HorizontalAlignment="Left" VerticalAlignment="Center"
+                                Orientation="Horizontal" Margin="14,0,0,0">
+                        <Image Width="16" Height="16"
+                               Source="{Binding Icon, Mode=OneWay}"
+                               RenderOptions.BitmapScalingMode="LowQuality"
+                               Stretch="Uniform" />
+                        <TextBlock Margin="8,0,0,0"
+                                   VerticalAlignment="Center"
+                                   FontSize="12"
+                                   FontWeight="SemiBold"
+                                   Foreground="{StaticResource TextPrimary}"
+                                   Text="Claudestrap" />
+                    </StackPanel>
+
+                    <StackPanel HorizontalAlignment="Right" VerticalAlignment="Center"
+                                Orientation="Horizontal" Margin="0,0,10,0">
+                        <Button Style="{StaticResource TitleIconStyle}" IsHitTestVisible="False" Opacity="0.4">
+                            <ui:SymbolIcon Symbol="Settings24" FontSize="12"
+                                           Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
+                        </Button>
+                        <Button Style="{StaticResource TitleIconStyle}" Margin="14,0,0,0" Click="Minimize_Click">
+                            <ui:SymbolIcon Symbol="Subtract24" FontSize="12"
+                                           Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
+                        </Button>
+                        <Button Style="{StaticResource TitleIconStyle}" Margin="14,0,0,0"
+                                Click="Close_Click">
+                            <ui:SymbolIcon Symbol="Dismiss24" FontSize="12"
+                                           Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
+                        </Button>
+                    </StackPanel>
+                </Grid>
+
+                <!-- =============== CENTER =============== -->
+                <StackPanel Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center">
+
+                    <TextBlock HorizontalAlignment="Center"
+                               FontSize="18"
+                               FontWeight="SemiBold"
+                               Foreground="{StaticResource TextSecondary}"
+                               Text="{Binding Message, Mode=OneWay}"
+                               TextWrapping="Wrap"
+                               TextAlignment="Center"
+                               MaxWidth="520" />
+
+                    <TextBlock Margin="0,10,0,0"
+                               HorizontalAlignment="Center"
+                               FontSize="12"
+                               FontWeight="Regular"
+                               LineHeight="18"
+                               Foreground="{StaticResource TextDescription}"
+                               Text="{Binding SourceLabel, Mode=OneWay}"
+                               TextAlignment="Center" />
+
+                    <!-- Loading bar (no OR divider — this is a progress view, nothing to choose between) -->
+                    <ui:ProgressBar Style="{StaticResource SlimProgressStyle}"
+                                    Margin="0,26,0,0"
+                                    Width="360"
+                                    IsIndeterminate="{Binding ProgressIndeterminate, Mode=OneWay}"
+                                    Maximum="{Binding ProgressMaximum, Mode=OneWay}"
+                                    Value="{Binding ProgressValue, Mode=OneWay}" />
+                </StackPanel>
+
+                <!-- =============== BOTTOM LEFT : version + commit badges (edge-to-edge) =============== -->
+                <StackPanel Grid.Row="2" Orientation="Horizontal"
+                            HorizontalAlignment="Left" VerticalAlignment="Bottom"
+                            Margin="12,0,0,12">
+                    <Border Style="{StaticResource VersionBadgeStyle}">
+                        <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center"
+                                   FontSize="12" FontWeight="SemiBold"
+                                   Foreground="{StaticResource VersionText}"
+                                   Text="{Binding AppVersionPill, Mode=OneTime}" />
+                    </Border>
+                    <Border Style="{StaticResource CommitBadgeStyle}" Margin="8,0,0,0">
+                        <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center"
+                                   FontSize="11" FontWeight="Regular"
+                                   Foreground="{StaticResource CommitText}"
+                                   TextTrimming="CharacterEllipsis"
+                                   Text="{Binding RobloxVersionPill, Mode=OneWay}" />
+                    </Border>
+                </StackPanel>
+            </Grid>
+        </Grid>
+    </Border>
+</base:WpfUiWindow>
