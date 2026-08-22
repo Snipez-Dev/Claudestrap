@@ -34,54 +34,47 @@
     </Window.TaskbarItemInfo>
 
     <Window.Resources>
-        <!-- ============ Palette ============ -->
-        <SolidColorBrush x:Key="WindowBg"         po:Freeze="True" Color="#111111" />
-        <SolidColorBrush x:Key="BackgroundBase"   po:Freeze="True" Color="#121212" />
-        <SolidColorBrush x:Key="SecondaryBg"      po:Freeze="True" Color="#1A1A1A" />
-        <SolidColorBrush x:Key="GridColor"        po:Freeze="True" Color="#232323" />
-        <SolidColorBrush x:Key="TextPrimary"      po:Freeze="True" Color="#E7E7E7" />
-        <SolidColorBrush x:Key="TextSecondary"    po:Freeze="True" Color="#BDBDBD" />
-        <SolidColorBrush x:Key="TextDescription"  po:Freeze="True" Color="#5E5E5E" />
-        <SolidColorBrush x:Key="IconColor"        po:Freeze="True" Color="#707070" />
-        <SolidColorBrush x:Key="IconHover"        po:Freeze="True" Color="#BFBFBF" />
-        <SolidColorBrush x:Key="LineColor"        po:Freeze="True" Color="#2A2A2A" />
-        <SolidColorBrush x:Key="OrText"           po:Freeze="True" Color="#555555" />
-        <SolidColorBrush x:Key="ButtonBase"       po:Freeze="True" Color="#4C4C4C" />
-        <SolidColorBrush x:Key="ButtonText"       po:Freeze="True" Color="#D6D6D6" />
-        <SolidColorBrush x:Key="BorderSubtle"     po:Freeze="True" Color="#0AFFFFFF" />
+        <!-- ============ Palette (cool indigo-tinted dark, matches the launch menu) ============ -->
+        <SolidColorBrush x:Key="WindowBg"         po:Freeze="True" Color="#0B0C11" />
+        <SolidColorBrush x:Key="BackgroundBase"   po:Freeze="True" Color="#0F1015" />
+        <SolidColorBrush x:Key="SecondaryBg"      po:Freeze="True" Color="#171821" />
+        <SolidColorBrush x:Key="GridColor"        po:Freeze="True" Color="#1E202B" />
+        <SolidColorBrush x:Key="TextPrimary"      po:Freeze="True" Color="#ECEBF5" />
+        <SolidColorBrush x:Key="TextSecondary"    po:Freeze="True" Color="#C2C2D6" />
+        <SolidColorBrush x:Key="TextDescription"  po:Freeze="True" Color="#6C6C82" />
+        <SolidColorBrush x:Key="IconColor"        po:Freeze="True" Color="#7C7D93" />
+        <SolidColorBrush x:Key="IconHover"        po:Freeze="True" Color="#C9C9DF" />
+        <SolidColorBrush x:Key="LineColor"        po:Freeze="True" Color="#262837" />
+        <SolidColorBrush x:Key="OrText"           po:Freeze="True" Color="#54556B" />
+        <SolidColorBrush x:Key="ButtonBase"       po:Freeze="True" Color="#4A3FC4" />
+        <SolidColorBrush x:Key="ButtonText"       po:Freeze="True" Color="#F2F1FB" />
+        <SolidColorBrush x:Key="BorderSubtle"     po:Freeze="True" Color="#1E6C63F0" />
 
-        <SolidColorBrush x:Key="VersionBg"        po:Freeze="True" Color="#4F4F4F" />
-        <SolidColorBrush x:Key="VersionText"      po:Freeze="True" Color="#EAEAEA" />
-        <SolidColorBrush x:Key="CommitBg"         po:Freeze="True" Color="#2B2B2B" />
-        <SolidColorBrush x:Key="CommitText"       po:Freeze="True" Color="#6D6D6D" />
+        <SolidColorBrush x:Key="VersionBg"        po:Freeze="True" Color="#2C2D49" />
+        <SolidColorBrush x:Key="VersionText"      po:Freeze="True" Color="#DBDBF2" />
+        <SolidColorBrush x:Key="CommitBg"         po:Freeze="True" Color="#181927" />
+        <SolidColorBrush x:Key="CommitText"       po:Freeze="True" Color="#6E6F87" />
 
-        <SolidColorBrush x:Key="ProgressTrack"    po:Freeze="True" Color="#252525" />
+        <SolidColorBrush x:Key="ProgressTrack"    po:Freeze="True" Color="#1B1C29" />
 
-        <!-- ============ Dot Pattern (dots centered inside each tile so the rounded
-             corners of the shell don't chop off partial edge dots) ============ -->
-        <DrawingBrush x:Key="DotPattern" po:Freeze="True"
-                      TileMode="Tile"
-                      Viewport="0,0,20,20" ViewportUnits="Absolute"
-                      Stretch="None">
-            <DrawingBrush.Drawing>
-                <GeometryDrawing>
-                    <GeometryDrawing.Brush>
-                        <SolidColorBrush Color="#5A5A5A" Opacity="0.7" />
-                    </GeometryDrawing.Brush>
-                    <GeometryDrawing.Geometry>
-                        <EllipseGeometry Center="10,10" RadiusX="1" RadiusY="1" />
-                    </GeometryDrawing.Geometry>
-                </GeometryDrawing>
-            </DrawingBrush.Drawing>
-        </DrawingBrush>
+        <!-- ============ Background glow (was a tiled dot pattern) : a soft violet
+             spotlight fading in from the top-right, on the same Border/CornerRadius
+             the dots used to occupy so it stays flush with the shell's rounded edge ============ -->
+        <RadialGradientBrush x:Key="BackgroundGlow" po:Freeze="True"
+                              Center="0.82,0.05" GradientOrigin="0.82,0.05"
+                              RadiusX="0.85" RadiusY="1.05">
+            <GradientStop Offset="0"    Color="#3D6C63F0" />
+            <GradientStop Offset="0.55" Color="#146C63F0" />
+            <GradientStop Offset="1"    Color="#006C63F0" />
+        </RadialGradientBrush>
 
-        <!-- ============ Progress bar fill (silver metallic effect) ============ -->
+        <!-- ============ Progress bar fill (indigo-tinted, was plain silver) ============ -->
         <LinearGradientBrush x:Key="ProgressFill" po:Freeze="True" StartPoint="0,0.5" EndPoint="1,0.5">
-            <GradientStop Offset="0.00" Color="#9E9E9E" />
-            <GradientStop Offset="0.25" Color="#D6D6D6" />
-            <GradientStop Offset="0.50" Color="#F0F0F0" />
-            <GradientStop Offset="0.75" Color="#D0D0D0" />
-            <GradientStop Offset="1.00" Color="#A8A8A8" />
+            <GradientStop Offset="0.00" Color="#6C5FE0" />
+            <GradientStop Offset="0.25" Color="#8B80FF" />
+            <GradientStop Offset="0.50" Color="#ADA4FF" />
+            <GradientStop Offset="0.75" Color="#8B80FF" />
+            <GradientStop Offset="1.00" Color="#6C5FE0" />
         </LinearGradientBrush>
 
         <!-- ============ Titlebar icon button (Settings/Min/Close) ============ -->
@@ -144,9 +137,7 @@
             <!-- Kept for BackgroundManager compatibility with the existing code-behind. -->
             <Image x:Name="BackgroundImage" Visibility="Collapsed" />
 
-            <!-- CacheMode intentionally omitted: BitmapCache locked the tiled brush at
-                 the first layout pass and left the bottom band undrawn. -->
-            <Border Background="{StaticResource DotPattern}"
+            <Border Background="{StaticResource BackgroundGlow}"
                     CornerRadius="12"
                     IsHitTestVisible="False" />
 

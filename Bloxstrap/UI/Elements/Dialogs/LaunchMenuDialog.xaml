@@ -30,59 +30,50 @@
     <Window.Resources>
         <converters:InverseBooleanConverter x:Key="InverseBooleanConverter" />
 
-        <!-- ============ Palette ============ -->
-        <SolidColorBrush x:Key="WindowBg"         po:Freeze="True" Color="#111111" />
-        <SolidColorBrush x:Key="BackgroundBase"   po:Freeze="True" Color="#121212" />
-        <SolidColorBrush x:Key="SecondaryBg"      po:Freeze="True" Color="#1A1A1A" />
-        <SolidColorBrush x:Key="GridColor"        po:Freeze="True" Color="#232323" />
-        <SolidColorBrush x:Key="TextPrimary"      po:Freeze="True" Color="#E7E7E7" />
-        <SolidColorBrush x:Key="TextSecondary"    po:Freeze="True" Color="#BDBDBD" />
-        <SolidColorBrush x:Key="TextDescription"  po:Freeze="True" Color="#5E5E5E" />
-        <SolidColorBrush x:Key="IconColor"        po:Freeze="True" Color="#707070" />
-        <SolidColorBrush x:Key="IconHover"        po:Freeze="True" Color="#BFBFBF" />
-        <SolidColorBrush x:Key="LineColor"        po:Freeze="True" Color="#2A2A2A" />
-        <SolidColorBrush x:Key="OrText"           po:Freeze="True" Color="#555555" />
-        <SolidColorBrush x:Key="ButtonBase"       po:Freeze="True" Color="#4C4C4C" />
-        <SolidColorBrush x:Key="ButtonText"       po:Freeze="True" Color="#D6D6D6" />
-        <SolidColorBrush x:Key="ButtonHover"      po:Freeze="True" Color="#646464" />
-        <SolidColorBrush x:Key="BorderSubtle"     po:Freeze="True" Color="#0AFFFFFF" />
-        <SolidColorBrush x:Key="ButtonTextHover"  po:Freeze="True" Color="#F0F0F0" />
-        <SolidColorBrush x:Key="HighlightBg"      po:Freeze="True" Color="#242424" />
-        <SolidColorBrush x:Key="SelectedBg"       po:Freeze="True" Color="#2A2A2A" />
-        <Color x:Key="DotPatternColor">#5A5A5A</Color>
+        <!-- ============ Palette (cool indigo-tinted dark, was flat gray) ============ -->
+        <SolidColorBrush x:Key="WindowBg"         po:Freeze="True" Color="#0B0C11" />
+        <SolidColorBrush x:Key="BackgroundBase"   po:Freeze="True" Color="#0F1015" />
+        <SolidColorBrush x:Key="SecondaryBg"      po:Freeze="True" Color="#171821" />
+        <SolidColorBrush x:Key="GridColor"        po:Freeze="True" Color="#1E202B" />
+        <SolidColorBrush x:Key="TextPrimary"      po:Freeze="True" Color="#ECEBF5" />
+        <SolidColorBrush x:Key="TextSecondary"    po:Freeze="True" Color="#C2C2D6" />
+        <SolidColorBrush x:Key="TextDescription"  po:Freeze="True" Color="#6C6C82" />
+        <SolidColorBrush x:Key="IconColor"        po:Freeze="True" Color="#7C7D93" />
+        <SolidColorBrush x:Key="IconHover"        po:Freeze="True" Color="#C9C9DF" />
+        <SolidColorBrush x:Key="LineColor"        po:Freeze="True" Color="#262837" />
+        <SolidColorBrush x:Key="OrText"           po:Freeze="True" Color="#54556B" />
+        <SolidColorBrush x:Key="ButtonBase"       po:Freeze="True" Color="#4A3FC4" />
+        <SolidColorBrush x:Key="ButtonText"       po:Freeze="True" Color="#F2F1FB" />
+        <SolidColorBrush x:Key="ButtonHover"      po:Freeze="True" Color="#5D50E6" />
+        <SolidColorBrush x:Key="BorderSubtle"     po:Freeze="True" Color="#1E6C63F0" />
+        <SolidColorBrush x:Key="ButtonTextHover"  po:Freeze="True" Color="#FFFFFF" />
+        <SolidColorBrush x:Key="HighlightBg"      po:Freeze="True" Color="#1D1F2B" />
+        <SolidColorBrush x:Key="SelectedBg"       po:Freeze="True" Color="#262837" />
 
-        <SolidColorBrush x:Key="VersionBg"        po:Freeze="True" Color="#4F4F4F" />
-        <SolidColorBrush x:Key="VersionText"      po:Freeze="True" Color="#EAEAEA" />
-        <SolidColorBrush x:Key="CommitBg"         po:Freeze="True" Color="#2B2B2B" />
-        <SolidColorBrush x:Key="CommitText"       po:Freeze="True" Color="#6D6D6D" />
+        <SolidColorBrush x:Key="VersionBg"        po:Freeze="True" Color="#2C2D49" />
+        <SolidColorBrush x:Key="VersionText"      po:Freeze="True" Color="#DBDBF2" />
+        <SolidColorBrush x:Key="CommitBg"         po:Freeze="True" Color="#181927" />
+        <SolidColorBrush x:Key="CommitText"       po:Freeze="True" Color="#6E6F87" />
 
-        <!-- ============ Dot Pattern (dots centered inside each tile so the rounded
-             corners of the shell don't chop off partial edge dots and leave a
-             visible gap at the bottom/corners) ============ -->
-        <DrawingBrush x:Key="DotPattern" po:Freeze="True"
-                      TileMode="Tile"
-                      Viewport="0,0,20,20" ViewportUnits="Absolute"
-                      Stretch="None">
-            <DrawingBrush.Drawing>
-                <GeometryDrawing>
-                    <GeometryDrawing.Brush>
-                        <SolidColorBrush Color="{StaticResource DotPatternColor}" Opacity="0.7" />
-                    </GeometryDrawing.Brush>
-                    <GeometryDrawing.Geometry>
-                        <EllipseGeometry Center="10,10" RadiusX="1" RadiusY="1" />
-                    </GeometryDrawing.Geometry>
-                </GeometryDrawing>
-            </DrawingBrush.Drawing>
-        </DrawingBrush>
+        <!-- ============ Background glow (was a tiled dot pattern) : a soft violet
+             spotlight fading in from the top-right, on the same Border/CornerRadius
+             the dots used to occupy so it stays flush with the shell's rounded edge ============ -->
+        <RadialGradientBrush x:Key="BackgroundGlow" po:Freeze="True"
+                              Center="0.82,0.05" GradientOrigin="0.82,0.05"
+                              RadiusX="0.85" RadiusY="1.05">
+            <GradientStop Offset="0"    Color="#3D6C63F0" />
+            <GradientStop Offset="0.55" Color="#146C63F0" />
+            <GradientStop Offset="1"    Color="#006C63F0" />
+        </RadialGradientBrush>
 
         <!-- ============ Button Gradient ============ -->
         <LinearGradientBrush x:Key="ButtonGradient" po:Freeze="True" StartPoint="0.5,0" EndPoint="0.5,1">
-            <GradientStop Offset="0" Color="#565656" />
-            <GradientStop Offset="1" Color="#444444" />
+            <GradientStop Offset="0" Color="#7A6FF5" />
+            <GradientStop Offset="1" Color="#5B4FE0" />
         </LinearGradientBrush>
         <LinearGradientBrush x:Key="ButtonGradientHover" po:Freeze="True" StartPoint="0.5,0" EndPoint="0.5,1">
-            <GradientStop Offset="0" Color="#6E6E6E" />
-            <GradientStop Offset="1" Color="#565656" />
+            <GradientStop Offset="0" Color="#8B80FF" />
+            <GradientStop Offset="1" Color="#6C5FF0" />
         </LinearGradientBrush>
 
         <!-- ============ Pill Button (Launch Roblox) ============ -->
@@ -104,9 +95,9 @@
                                     CornerRadius="19"
                                     SnapsToDevicePixels="True">
                                 <Border.Effect>
-                                    <DropShadowEffect BlurRadius="18" ShadowDepth="6"
-                                                      Direction="270" Opacity="0.35"
-                                                      Color="Black" RenderingBias="Performance" />
+                                    <DropShadowEffect BlurRadius="20" ShadowDepth="6"
+                                                      Direction="270" Opacity="0.45"
+                                                      Color="#5B4FE0" RenderingBias="Performance" />
                                 </Border.Effect>
                             </Border>
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
@@ -298,7 +289,7 @@
         </Style>
     </Window.Resources>
 
-    <!-- Window shell : rounded 12px, #121212 base + dot overlay flush to the rounded edge -->
+    <!-- Window shell : rounded 12px, indigo-tinted near-black base + a soft glow overlay flush to the rounded edge -->
     <Border Background="{StaticResource BackgroundBase}"
             CornerRadius="12"
             SnapsToDevicePixels="True"
@@ -306,12 +297,9 @@
             BorderThickness="1">
 
         <Grid Background="Transparent">
-            <!-- Dot overlay lives on a Border with the same CornerRadius as the shell,
-                 so its rounded edge sits exactly on top of the shell's — no visible seam.
-                 CacheMode intentionally omitted: BitmapCache froze the tiled brush at the
-                 initial layout size and left the bottom band undrawn once WPF finished
-                 measuring the real window. Plain rendering re-tiles on resize. -->
-            <Border Background="{StaticResource DotPattern}"
+            <!-- Glow overlay lives on a Border with the same CornerRadius as the shell,
+                 so its rounded edge sits exactly on top of the shell's — no visible seam. -->
+            <Border Background="{StaticResource BackgroundGlow}"
                     CornerRadius="12"
                     IsHitTestVisible="False" />
 

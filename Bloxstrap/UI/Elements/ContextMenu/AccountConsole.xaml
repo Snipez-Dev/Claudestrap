@@ -29,46 +29,39 @@
         <converters:InverseBooleanConverter x:Key="InverseBooleanConverter" />
 
         <!-- ============ Palette (matches LaunchMenuDialog) ============ -->
-        <SolidColorBrush x:Key="BackgroundBase"   po:Freeze="True" Color="#121212" />
-        <SolidColorBrush x:Key="SecondaryBg"      po:Freeze="True" Color="#1A1A1A" />
-        <SolidColorBrush x:Key="CardBg"           po:Freeze="True" Color="#191919" />
-        <SolidColorBrush x:Key="TextPrimary"      po:Freeze="True" Color="#E7E7E7" />
-        <SolidColorBrush x:Key="TextSecondary"    po:Freeze="True" Color="#BDBDBD" />
-        <SolidColorBrush x:Key="TextDescription"  po:Freeze="True" Color="#5E5E5E" />
-        <SolidColorBrush x:Key="IconColor"        po:Freeze="True" Color="#707070" />
-        <SolidColorBrush x:Key="IconHover"        po:Freeze="True" Color="#BFBFBF" />
-        <SolidColorBrush x:Key="LineColor"        po:Freeze="True" Color="#2A2A2A" />
-        <SolidColorBrush x:Key="ButtonBase"       po:Freeze="True" Color="#4C4C4C" />
-        <SolidColorBrush x:Key="ButtonText"       po:Freeze="True" Color="#D6D6D6" />
-        <SolidColorBrush x:Key="ButtonHover"      po:Freeze="True" Color="#646464" />
-        <SolidColorBrush x:Key="BorderSubtle"     po:Freeze="True" Color="#0AFFFFFF" />
+        <SolidColorBrush x:Key="BackgroundBase"   po:Freeze="True" Color="#0F1015" />
+        <SolidColorBrush x:Key="SecondaryBg"      po:Freeze="True" Color="#171821" />
+        <SolidColorBrush x:Key="CardBg"           po:Freeze="True" Color="#14151E" />
+        <SolidColorBrush x:Key="TextPrimary"      po:Freeze="True" Color="#ECEBF5" />
+        <SolidColorBrush x:Key="TextSecondary"    po:Freeze="True" Color="#C2C2D6" />
+        <SolidColorBrush x:Key="TextDescription"  po:Freeze="True" Color="#6C6C82" />
+        <SolidColorBrush x:Key="IconColor"        po:Freeze="True" Color="#7C7D93" />
+        <SolidColorBrush x:Key="IconHover"        po:Freeze="True" Color="#C9C9DF" />
+        <SolidColorBrush x:Key="LineColor"        po:Freeze="True" Color="#262837" />
+        <SolidColorBrush x:Key="ButtonBase"       po:Freeze="True" Color="#4A3FC4" />
+        <SolidColorBrush x:Key="ButtonText"       po:Freeze="True" Color="#F2F1FB" />
+        <SolidColorBrush x:Key="ButtonHover"      po:Freeze="True" Color="#5D50E6" />
+        <SolidColorBrush x:Key="BorderSubtle"     po:Freeze="True" Color="#1E6C63F0" />
         <SolidColorBrush x:Key="DangerBase"       po:Freeze="True" Color="#5A2E2E" />
         <SolidColorBrush x:Key="DangerHover"      po:Freeze="True" Color="#743939" />
         <SolidColorBrush x:Key="DangerText"       po:Freeze="True" Color="#E7B8B8" />
 
-        <DrawingBrush x:Key="DotPattern" po:Freeze="True"
-                      TileMode="Tile"
-                      Viewport="0,0,20,20" ViewportUnits="Absolute"
-                      Stretch="None">
-            <DrawingBrush.Drawing>
-                <GeometryDrawing>
-                    <GeometryDrawing.Brush>
-                        <SolidColorBrush Color="#5A5A5A" Opacity="0.5" />
-                    </GeometryDrawing.Brush>
-                    <GeometryDrawing.Geometry>
-                        <EllipseGeometry Center="10,10" RadiusX="1" RadiusY="1" />
-                    </GeometryDrawing.Geometry>
-                </GeometryDrawing>
-            </DrawingBrush.Drawing>
-        </DrawingBrush>
+        <!-- ============ Background glow (was a tiled dot pattern) ============ -->
+        <RadialGradientBrush x:Key="BackgroundGlow" po:Freeze="True"
+                              Center="0.82,0.05" GradientOrigin="0.82,0.05"
+                              RadiusX="0.85" RadiusY="1.05">
+            <GradientStop Offset="0"    Color="#3D6C63F0" />
+            <GradientStop Offset="0.55" Color="#146C63F0" />
+            <GradientStop Offset="1"    Color="#006C63F0" />
+        </RadialGradientBrush>
 
         <LinearGradientBrush x:Key="ButtonGradient" po:Freeze="True" StartPoint="0.5,0" EndPoint="0.5,1">
-            <GradientStop Offset="0" Color="#565656" />
-            <GradientStop Offset="1" Color="#444444" />
+            <GradientStop Offset="0" Color="#7A6FF5" />
+            <GradientStop Offset="1" Color="#5B4FE0" />
         </LinearGradientBrush>
         <LinearGradientBrush x:Key="ButtonGradientHover" po:Freeze="True" StartPoint="0.5,0" EndPoint="0.5,1">
-            <GradientStop Offset="0" Color="#6E6E6E" />
-            <GradientStop Offset="1" Color="#565656" />
+            <GradientStop Offset="0" Color="#8B80FF" />
+            <GradientStop Offset="1" Color="#6C5FF0" />
         </LinearGradientBrush>
 
         <!-- ============ Titlebar icon button ============ -->
@@ -147,7 +140,7 @@
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter Property="Foreground" Value="{StaticResource TextPrimary}" />
-                                <Setter TargetName="Bd" Property="Background" Value="#242424" />
+                                <Setter TargetName="Bd" Property="Background" Value="#1D1F2B" />
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
                                 <Setter Property="Opacity" Value="0.5" />
@@ -195,7 +188,7 @@
             BorderThickness="1">
 
         <Grid MouseDown="Header_MouseDown" Background="Transparent">
-            <Border Background="{StaticResource DotPattern}" CornerRadius="12" IsHitTestVisible="False" />
+            <Border Background="{StaticResource BackgroundGlow}" CornerRadius="12" IsHitTestVisible="False" />
 
             <Grid>
                 <Grid.RowDefinitions>
