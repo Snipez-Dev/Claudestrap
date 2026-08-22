@@ -17,7 +17,7 @@ namespace Claudestrap.UI.ViewModels.Installer
 {
     /// <summary>One entry in the bottom-right account dropdown -- either a saved
     /// account, or the trailing "+ Add Account" action row (Model is null).</summary>
-    public sealed class AccountDropdownItem
+    public sealed class AccountDropdownItem : INotifyPropertyChanged
     {
         public RobloxAccount? Model { get; }
 
@@ -27,7 +27,26 @@ namespace Claudestrap.UI.ViewModels.Installer
             ? "+ Add Account"
             : (string.IsNullOrEmpty(Model.Username) ? "Unknown" : Model.Username);
 
+        private bool _isLoggedOut;
+        /// <summary>True once a background check finds this account's saved cookie no
+        /// longer authenticates -- drives the relogin icon in the dropdown row. Starts
+        /// false (unknown/assumed good) until <see cref="LaunchMenuViewModel.RefreshLoginStatusAsync"/> resolves.</summary>
+        public bool IsLoggedOut
+        {
+            get => _isLoggedOut;
+            set
+            {
+                if (_isLoggedOut == value)
+                    return;
+
+                _isLoggedOut = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsLoggedOut)));
+            }
+        }
+
         public AccountDropdownItem(RobloxAccount? model) => Model = model;
+
+        public event PropertyChangedEventHandler? PropertyChanged;
 
         // ComboBox.SelectionBoxItem falls back to the raw item's ToString() rather
         // than DisplayMemberPath once it's rendered through a custom ControlTemplate
@@ -93,15 +112,23 @@ namespace Claudestrap.UI.ViewModels.Installer
             set { _isLaunching = value; OnPropertyChanged(nameof(IsLaunching)); }
         }
 
-        public ICommand LaunchSettingsCommand => new RelayCommand(LaunchSettings);
+        // Cached rather than allocated per-access: WPF re-reads an ICommand-bound
+        // property far more often than once (window activation, focus changes, etc.),
+        // and each expression-bodied `=> new RelayCommand(...)` getter used to hand
+        // back a fresh instance every time.
+        public ICommand LaunchSettingsCommand { get; }
 
-        public ICommand LaunchRobloxCommand => new AsyncRelayCommand(LaunchRobloxAsync);
+        public ICommand LaunchRobloxCommand { get; }
 
-        public ICommand LaunchRobloxStudioCommand => new RelayCommand(LaunchRobloxStudio);
+        public ICommand LaunchRobloxStudioCommand { get; }
 
-        public ICommand LaunchAboutCommand => new RelayCommand(LaunchAbout);
+        public ICommand LaunchAboutCommand { get; }
 
-        public ICommand CleanTracesCommand => new RelayCommand(CleanTraces);
+        public ICommand CleanTracesCommand { get; }
+
+        public ICommand DeleteAccountCommand { get; }
+
+        public ICommand RelinkAccountCommand { get; }
 
         /// <summary>Wipes Roblox trace artifacts (logs, http cache, temp) on demand.</summary>
         private void CleanTraces()
@@ -136,6 +163,14 @@ namespace Claudestrap.UI.ViewModels.Installer
 
         public LaunchMenuViewModel()
         {
+            LaunchSettingsCommand = new RelayCommand(LaunchSettings);
+            LaunchRobloxCommand = new AsyncRelayCommand(LaunchRobloxAsync);
+            LaunchRobloxStudioCommand = new RelayCommand(LaunchRobloxStudio);
+            LaunchAboutCommand = new RelayCommand(LaunchAbout);
+            CleanTracesCommand = new RelayCommand(CleanTraces);
+            DeleteAccountCommand = new RelayCommand<AccountDropdownItem?>(DeleteAccount);
+            RelinkAccountCommand = new AsyncRelayCommand<AccountDropdownItem?>(RelinkAccountAsync);
+
             ReloadAccountOptions();
         }
 
@@ -164,6 +199,72 @@ namespace Claudestrap.UI.ViewModels.Installer
                 RememberSelection(_selectedAccountOption?.Model);
 
             OnPropertyChanged(nameof(SelectedAccountOption));
+
+            _ = RefreshLoginStatusAsync();
+        }
+
+        /// <summary>Checks each saved account's cookie against Roblox in the background
+        /// and flips <see cref="AccountDropdownItem.IsLoggedOut"/> so the dropdown can
+        /// surface a relogin icon for accounts whose session has expired.</summary>
+        private async Task RefreshLoginStatusAsync()
+        {
+            foreach (var item in AccountOptions.Where(o => o.Model is not null).ToList())
+            {
+                string? cookie = AccountCookieProtector.Unprotect(item.Model!.EncryptedCookie);
+
+                if (string.IsNullOrEmpty(cookie))
+                {
+                    item.IsLoggedOut = true;
+                    continue;
+                }
+
+                var info = await RobloxAuthApi.FetchUserInfoAsync(cookie).ConfigureAwait(true);
+                item.IsLoggedOut = !info.Ok;
+            }
+        }
+
+        private void DeleteAccount(AccountDropdownItem? item)
+        {
+            if (item?.Model is null)
+                return;
+
+            var result = Frontend.ShowMessageBox(
+                $"Remove the saved account \"{item.DisplayName}\"?",
+                MessageBoxImage.Question,
+                MessageBoxButton.YesNo,
+                MessageBoxResult.No);
+
+            if (result != MessageBoxResult.Yes)
+                return;
+
+            App.Accounts.Prop.Accounts.Remove(item.Model);
+
+            if (App.Accounts.Prop.LastSelectedAccountId == item.Model.Id)
+                App.Accounts.Prop.LastSelectedAccountId = null;
+
+            App.Accounts.Save();
+            ReloadAccountOptions();
+        }
+
+        private async Task RelinkAccountAsync(AccountDropdownItem? item)
+        {
+            if (item?.Model is null)
+                return;
+
+            var dialog = new RobloxLoginDialog();
+            var result = await dialog.ShowAndWaitAsync();
+
+            if (!result.Ok || result.Cookie is null)
+                return;
+
+            item.Model.EncryptedCookie = AccountCookieProtector.Protect(result.Cookie);
+
+            if (!string.IsNullOrEmpty(result.Username))
+                item.Model.Username = result.Username;
+
+            App.Accounts.Save();
+            item.IsLoggedOut = false;
+            ReloadAccountOptions(preferSelect: item.Model);
         }
 
         /// <summary>Persists the dropdown's current pick for the next start.</summary>

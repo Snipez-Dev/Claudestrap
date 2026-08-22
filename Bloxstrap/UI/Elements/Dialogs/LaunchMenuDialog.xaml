@@ -46,6 +46,10 @@
         <SolidColorBrush x:Key="ButtonText"       po:Freeze="True" Color="#D6D6D6" />
         <SolidColorBrush x:Key="ButtonHover"      po:Freeze="True" Color="#646464" />
         <SolidColorBrush x:Key="BorderSubtle"     po:Freeze="True" Color="#0AFFFFFF" />
+        <SolidColorBrush x:Key="ButtonTextHover"  po:Freeze="True" Color="#F0F0F0" />
+        <SolidColorBrush x:Key="HighlightBg"      po:Freeze="True" Color="#242424" />
+        <SolidColorBrush x:Key="SelectedBg"       po:Freeze="True" Color="#2A2A2A" />
+        <Color x:Key="DotPatternColor">#5A5A5A</Color>
 
         <SolidColorBrush x:Key="VersionBg"        po:Freeze="True" Color="#4F4F4F" />
         <SolidColorBrush x:Key="VersionText"      po:Freeze="True" Color="#EAEAEA" />
@@ -62,7 +66,7 @@
             <DrawingBrush.Drawing>
                 <GeometryDrawing>
                     <GeometryDrawing.Brush>
-                        <SolidColorBrush Color="#5A5A5A" Opacity="0.7" />
+                        <SolidColorBrush Color="{StaticResource DotPatternColor}" Opacity="0.7" />
                     </GeometryDrawing.Brush>
                     <GeometryDrawing.Geometry>
                         <EllipseGeometry Center="10,10" RadiusX="1" RadiusY="1" />
@@ -110,7 +114,7 @@
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="Bd" Property="Background" Value="{StaticResource ButtonGradientHover}" />
-                                <Setter Property="Foreground" Value="#F0F0F0" />
+                                <Setter Property="Foreground" Value="{StaticResource ButtonTextHover}" />
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
                                 <Setter TargetName="Bd" Property="Background" Value="{StaticResource ButtonBase}" />
@@ -172,7 +176,7 @@
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter Property="Foreground" Value="{StaticResource TextPrimary}" />
-                                <Setter TargetName="Bd" Property="Background" Value="#242424" />
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource HighlightBg}" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -208,10 +212,10 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsHighlighted" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="#242424" />
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource HighlightBg}" />
                             </Trigger>
                             <Trigger Property="IsSelected" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="#2A2A2A" />
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource SelectedBg}" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -301,7 +305,7 @@
             BorderBrush="{StaticResource BorderSubtle}"
             BorderThickness="1">
 
-        <Grid MouseDown="Header_MouseDown" Background="Transparent">
+        <Grid Background="Transparent">
             <!-- Dot overlay lives on a Border with the same CornerRadius as the shell,
                  so its rounded edge sits exactly on top of the shell's — no visible seam.
                  CacheMode intentionally omitted: BitmapCache froze the tiled brush at the
@@ -319,14 +323,20 @@
                 </Grid.RowDefinitions>
 
                 <!-- =============== TOP BAR (edge-to-edge) =============== -->
-                <Grid Grid.Row="0" Background="Transparent">
-                    <!-- Left group : icon -->
+                <Grid Grid.Row="0" Background="Transparent" MouseDown="Header_MouseDown">
+                    <!-- Left group : icon (14,12) + title @ 8px gap -->
                     <StackPanel HorizontalAlignment="Left" VerticalAlignment="Center"
                                 Orientation="Horizontal" Margin="14,0,0,0">
                         <Image Width="16" Height="16"
                                Source="pack://application:,,,/Claudestrap.ico"
                                RenderOptions.BitmapScalingMode="LowQuality"
                                Stretch="Uniform" />
+                        <TextBlock Margin="8,0,0,0"
+                                   VerticalAlignment="Center"
+                                   FontSize="12"
+                                   FontWeight="SemiBold"
+                                   Foreground="{StaticResource TextPrimary}"
+                                   Text="Claudestrap" />
                     </StackPanel>
 
                     <!-- Right group : Settings / Minimize / Close -->
@@ -423,6 +433,7 @@
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,20,0,0">
                         <Button Style="{StaticResource SecondaryActionStyle}"
                                 Command="{Binding LaunchRobloxStudioCommand, Mode=OneTime}"
+                                Visibility="{Binding RobloxStudioOptionVisibility, Mode=OneTime}"
                                 Content="Studio" />
                         <Button Style="{StaticResource SecondaryActionStyle}" Margin="8,0,0,0"
                                 Command="{Binding CleanTracesCommand, Mode=OneTime}"
@@ -456,8 +467,66 @@
                               ItemsSource="{Binding AccountOptions}"
                               SelectedItem="{Binding SelectedAccountOption, Mode=TwoWay}"
                               IsSynchronizedWithCurrentItem="False"
-                              DisplayMemberPath="DisplayName"
-                              IsEnabled="{Binding IsLaunching, Converter={StaticResource InverseBooleanConverter}}" />
+                              IsEnabled="{Binding IsLaunching, Converter={StaticResource InverseBooleanConverter}}">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <TextBlock Grid.Column="0"
+                                               Text="{Binding DisplayName}"
+                                               VerticalAlignment="Center"
+                                               TextTrimming="CharacterEllipsis"
+                                               Margin="0,0,8,0" />
+
+                                    <!-- Relogin: only shown once a background check finds the saved cookie no longer authenticates -->
+                                    <Button Grid.Column="1"
+                                            Width="20" Height="20"
+                                            Margin="0,0,2,0"
+                                            Command="{Binding DataContext.RelinkAccountCommand, RelativeSource={RelativeSource AncestorType=ComboBox}}"
+                                            CommandParameter="{Binding}"
+                                            ToolTip="Logged out — click to sign in again">
+                                        <Button.Style>
+                                            <Style TargetType="Button" BasedOn="{StaticResource TitleIconStyle}">
+                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsLoggedOut}" Value="True">
+                                                        <Setter Property="Visibility" Value="Visible" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Button.Style>
+                                        <ui:SymbolIcon Symbol="ArrowClockwise24" FontSize="11"
+                                                       Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
+                                    </Button>
+
+                                    <!-- Delete: hidden on the trailing "+ Add Account" row -->
+                                    <Button Grid.Column="2"
+                                            Width="20" Height="20"
+                                            Command="{Binding DataContext.DeleteAccountCommand, RelativeSource={RelativeSource AncestorType=ComboBox}}"
+                                            CommandParameter="{Binding}"
+                                            ToolTip="Remove account">
+                                        <Button.Style>
+                                            <Style TargetType="Button" BasedOn="{StaticResource TitleIconStyle}">
+                                                <Setter Property="Visibility" Value="Visible" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsAddAccountOption}" Value="True">
+                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Button.Style>
+                                        <ui:SymbolIcon Symbol="Delete24" FontSize="11"
+                                                       Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
+                                    </Button>
+                                </Grid>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
                 </Grid>
             </Grid>
         </Grid>

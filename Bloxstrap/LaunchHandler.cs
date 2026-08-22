@@ -241,6 +241,28 @@ namespace Claudestrap
                 return;
             }
 
+            // If neither Player nor Studio has ever been installed under this Claudestrap
+            // profile, don't silently kick off a full download -- ask first, same as any
+            // other launch confirmation below.
+            bool alreadyInstalled = launchMode == LaunchMode.Studio
+                ? !string.IsNullOrWhiteSpace(App.State.Prop.Studio.VersionGuid)
+                : !string.IsNullOrWhiteSpace(App.State.Prop.Player.VersionGuid);
+
+            if (!alreadyInstalled && !App.LaunchSettings.QuietFlag.Active)
+            {
+                var installResult = Frontend.ShowMessageBox(
+                    "No Roblox installation was found. Claudestrap needs to download and install it before it can launch.\n\nInstall it now?",
+                    MessageBoxImage.Information,
+                    MessageBoxButton.OKCancel,
+                    MessageBoxResult.OK);
+
+                if (installResult != MessageBoxResult.OK)
+                {
+                    App.Terminate();
+                    return;
+                }
+            }
+
             // Only ever *claim* Roblox is running when there's a client the user can
             // actually see. Both of the obvious signals lie: the singleton mutex outlives
             // abnormal exits (crash, kill, sign-out), and crashed/half-shut-down clients

@@ -18,7 +18,7 @@ namespace Claudestrap.Models.Persistable
         public string BootstrapperIconCustomLocation { get; set; } = "";
         public Theme Theme2 { get; set; } = Theme.Dark;
         public string? SelectedCustomTheme { get; set; } = null;
-        public bool CheckForUpdates { get; set; } = false;
+        public bool CheckForUpdates { get; set; } = true;
         public string SelectedCpuPriority { get; set; } = "Automatic";
         public int MaxCpuCores { get; set; } = Environment.ProcessorCount;
         public int TotalLogicalCores { get; set; } = Environment.ProcessorCount;
