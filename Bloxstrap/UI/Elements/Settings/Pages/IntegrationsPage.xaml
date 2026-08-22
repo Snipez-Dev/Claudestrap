@@ -402,6 +402,12 @@
             <ui:ToggleSwitch IsChecked="{Binding UncapFPS, Mode=TwoWay}" />
         </controls:OptionControl>
 
+        <controls:OptionControl
+            Header="Start Roblox in Dark Mode"
+            Description="Forces Roblox's own interface theme to dark before launch.">
+            <ui:ToggleSwitch IsChecked="{Binding StartInDarkMode, Mode=TwoWay}" />
+        </controls:OptionControl>
+
         <controls:OptionControl 
     Header="Account Switcher"
     Description="Easily create or switch Roblox accounts. Backup Accounts for Later Use.">

@@ -422,6 +422,12 @@ namespace Claudestrap.UI.ViewModels.Settings
             set => RobloxSettings.SetUncapped(value);
         }
 
+        public bool StartInDarkMode
+        {
+            get => RobloxSettings.IsDarkMode();
+            set => RobloxSettings.SetDarkMode(value);
+        }
+
         public bool DiscordActivityJoinEnabled
         {
             get => !App.Settings.Prop.HideRPCButtons;

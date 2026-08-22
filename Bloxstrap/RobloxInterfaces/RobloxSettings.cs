@@ -131,5 +131,66 @@ namespace Claudestrap
             }
             return null;
         }
+
+        public static bool IsDarkMode()
+        {
+            try
+            {
+                if (!File.Exists(SettingsPath)) return false;
+
+                var doc = XDocument.Load(SettingsPath);
+                var themeElement = FindThemeElement(doc);
+
+                return themeElement != null && themeElement.Value.Equals("Dark", StringComparison.OrdinalIgnoreCase);
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public static void SetDarkMode(bool dark)
+        {
+            try
+            {
+                string value = dark ? "Dark" : "Light";
+
+                if (!File.Exists(SettingsPath))
+                {
+                    var newDoc = new XDocument(
+                        new XElement("robloxSettings",
+                            new XElement("string", new XAttribute("name", "InterfaceStyle"), value)
+                        )
+                    );
+                    Directory.CreateDirectory(Path.GetDirectoryName(SettingsPath)!);
+                    newDoc.Save(SettingsPath);
+                    return;
+                }
+
+                var doc = XDocument.Load(SettingsPath);
+                var themeElement = FindThemeElement(doc);
+
+                if (themeElement != null)
+                    themeElement.Value = value;
+                else
+                    doc.Root?.Add(new XElement("string", new XAttribute("name", "InterfaceStyle"), value));
+
+                doc.Save(SettingsPath);
+            }
+            catch
+            {
+            }
+        }
+
+        private static XElement? FindThemeElement(XDocument doc)
+        {
+            foreach (var stringElement in doc.Descendants("string"))
+            {
+                var nameAttr = stringElement.Attribute("name");
+                if (nameAttr != null && nameAttr.Value == "InterfaceStyle")
+                    return stringElement;
+            }
+            return null;
+        }
     }
 }

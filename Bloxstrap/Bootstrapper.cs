@@ -231,7 +231,10 @@ namespace Claudestrap
 #if (!DEBUG || DEBUG_UPDATER) && !QA_BUILD
             if (App.Settings.Prop.CheckForUpdates && !App.LaunchSettings.UpgradeFlag.Active)
             {
-                bool updateApplied = await CheckAndApplyUpdate(LOG_IDENT);
+                // No-op if the launch menu already checked earlier in this session --
+                // see GithubUpdater.CheckForUpdateAsync. Only actually prompts here for
+                // launches that skip the menu entirely (e.g. a roblox-player: protocol join).
+                bool updateApplied = await GithubUpdater.CheckForUpdateAsync(App.LaunchSettings.QuietFlag.Active);
                 if (updateApplied)
                 {
                     Dialog?.CloseBootstrapper();
@@ -294,73 +297,6 @@ namespace Claudestrap
             Dialog?.CloseBootstrapper();
         }
 
-        /// <summary>Checks GitHub for a newer tagged release and, if the user agrees
-        /// (or this is a quiet launch), downloads and applies it via <see cref="GithubUpdater"/>.
-        /// Returns true when an update was applied and the caller should stop the rest
-        /// of the bootstrap -- the process is about to restart into the new version.</summary>
-        private async Task<bool> CheckAndApplyUpdate(string logIdent)
-        {
-            try
-            {
-                string? latestTag = await GithubUpdater.GetLatestVersionTagAsync().ConfigureAwait(false);
-
-                if (string.IsNullOrWhiteSpace(latestTag) || !IsNewerVersion(latestTag))
-                {
-                    App.Logger.WriteLine(logIdent, "No newer release found.");
-                    return false;
-                }
-
-                App.Logger.WriteLine(logIdent, $"Newer release found: {latestTag}");
-
-                bool proceed = App.LaunchSettings.QuietFlag.Active;
-
-                if (!proceed)
-                {
-                    var result = Frontend.ShowMessageBox(
-                        $"A new version of Claudestrap is available ({latestTag}), and you're currently on {App.Version}.\n\n" +
-                        "Would you like to upgrade now, or stay on your current version?",
-                        MessageBoxImage.Information,
-                        MessageBoxButton.YesNo,
-                        MessageBoxResult.Yes);
-
-                    proceed = result == MessageBoxResult.Yes;
-                }
-
-                if (!proceed)
-                {
-                    App.Logger.WriteLine(logIdent, "Update declined.");
-                    return false;
-                }
-
-                SetStatus($"Updating to {latestTag}...");
-
-                bool applied = await GithubUpdater.DownloadAndInstallUpdate(latestTag).ConfigureAwait(false);
-
-                App.Logger.WriteLine(logIdent, applied
-                    ? "Update applied, restarting."
-                    : "Update download/apply failed, continuing with current version.");
-
-                return applied;
-            }
-            catch (Exception ex)
-            {
-                App.Logger.WriteLine(logIdent, $"Update check failed: {ex.Message}");
-                return false;
-            }
-        }
-
-        private static bool IsNewerVersion(string remoteTag)
-        {
-            if (!App.Settings.Prop.CheckForUpdates) return false;
-
-            string local = Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "0.0.0";
-            remoteTag = remoteTag.TrimStart('v', 'V');
-
-            if (Version.TryParse(local, out var lv) && Version.TryParse(remoteTag, out var rv))
-                return rv > lv;
-
-            return string.Compare(remoteTag, local, StringComparison.OrdinalIgnoreCase) > 0;
-        }
 
         private static void RestartApplication()
         {

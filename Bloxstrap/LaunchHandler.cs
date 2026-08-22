@@ -43,7 +43,7 @@ namespace Claudestrap
             }
         }
 
-        public static void ProcessLaunchArgs()
+        public static async Task ProcessLaunchArgs()
         {
             const string LOG_IDENT = "LaunchHandler::ProcessLaunchArgs";
             if (App.LaunchSettings.UninstallFlag.Active)
@@ -79,7 +79,7 @@ namespace Claudestrap
             else if (!App.LaunchSettings.QuietFlag.Active)
             {
                 App.Logger.WriteLine(LOG_IDENT, "Opening menu");
-                LaunchMenu();
+                await LaunchMenu();
             }
             else
             {
@@ -88,7 +88,7 @@ namespace Claudestrap
             }
         }
 
-        public static void LaunchInstaller()
+        public static async Task LaunchInstaller()
         {
             var interlock = new InterProcessLock("Installer");
 
@@ -118,7 +118,7 @@ namespace Claudestrap
                     installer.DoInstall();
                     interlock.Dispose();
 
-                    ProcessLaunchArgs();
+                    await ProcessLaunchArgs();
                 }
                 else
                 {
@@ -212,8 +212,20 @@ namespace Claudestrap
             }
         }
 
-        public static void LaunchMenu()
+        public static async Task LaunchMenu()
         {
+            // Check for updates right as the app opens, not just when the user presses
+            // Play -- CheckForUpdateAsync only actually runs once per session, so this
+            // doesn't double-prompt if LaunchRoblox's own bootstrapper check also runs.
+#if (!DEBUG || DEBUG_UPDATER) && !QA_BUILD
+            if (App.Settings.Prop.CheckForUpdates && !App.LaunchSettings.UpgradeFlag.Active)
+            {
+                bool updateApplied = await GithubUpdater.CheckForUpdateAsync(quiet: false);
+                if (updateApplied)
+                    return;
+            }
+#endif
+
             var dialog = new LaunchMenuDialog();
             dialog.ShowDialog();
 
