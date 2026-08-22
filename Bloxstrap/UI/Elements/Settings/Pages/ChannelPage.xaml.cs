@@ -199,11 +199,19 @@ namespace Claudestrap.UI.Elements.Settings.Pages
                     return;
                 }
 
-                string currentVersion = Assembly.GetExecutingAssembly().GetName().Version!.ToString();
+                string currentVersion = App.Version;
 
                 if (IsNewerVersion(latestTag, currentVersion))
                 {
-                    Frontend.ShowMessageBox($"A new version ({latestTag}) is available! Downloading and installing now...");
+                    var result = Frontend.ShowMessageBox(
+                        $"A new version of Claudestrap is available ({latestTag}), and you're currently on {currentVersion}.\n\n" +
+                        "Would you like to upgrade now, or stay on your current version?",
+                        MessageBoxImage.Information,
+                        MessageBoxButton.YesNo,
+                        MessageBoxResult.Yes);
+
+                    if (result != MessageBoxResult.Yes)
+                        return;
 
                     bool applied = await GithubUpdater.DownloadAndInstallUpdate(latestTag);
 

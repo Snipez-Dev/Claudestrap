@@ -1,8 +1,6 @@
 using System;
 using System.IO;
-using System.IO.Compression;
 using System.Net.Http;
-using System.Text.Json;
 using System.Threading.Tasks;
 using Claudestrap;
 
@@ -13,19 +11,26 @@ public static class GithubUpdater
         DefaultRequestHeaders = { { "User-Agent", "Claudestrap-Updater" } }
     };
 
-    private static string LatestReleaseUrl => $"https://api.github.com/repos/{App.ProjectRepository}/releases/latest";
+    // Plain-text file at the repo root holding just the latest version number --
+    // simpler than parsing the Releases API, and the release workflow keeps it in
+    // sync automatically on every tag push.
+    private static string VersionFileUrl => $"https://raw.githubusercontent.com/{App.ProjectRepository}/main/version.txt";
+
+    // GitHub's well-known "latest release" download alias -- always resolves to
+    // whatever the newest release's same-named asset is, no API call needed.
+    private static string LatestExeDownloadUrl => $"https://github.com/{App.ProjectRepository}/releases/latest/download/Claudestrap.exe";
 
     public static async Task<string?> GetLatestVersionTagAsync()
     {
         try
         {
-            string response = await http.GetStringAsync(LatestReleaseUrl);
-            using var doc = JsonDocument.Parse(response);
-            return doc.RootElement.GetProperty("tag_name").GetString();
+            string response = await http.GetStringAsync(VersionFileUrl);
+            string version = response.Trim();
+            return string.IsNullOrWhiteSpace(version) ? null : version;
         }
         catch (Exception ex)
         {
-            App.Logger.WriteLine("GitHubUpdater", $"Failed to get latest release tag: {ex}");
+            App.Logger.WriteLine("GitHubUpdater", $"Failed to read version.txt: {ex}");
             return null;
         }
     }
@@ -34,24 +39,8 @@ public static class GithubUpdater
     {
         try
         {
-            string response = await http.GetStringAsync(LatestReleaseUrl);
-            using var doc = JsonDocument.Parse(response);
-            var assets = doc.RootElement.GetProperty("assets");
-
-            foreach (var asset in assets.EnumerateArray())
-            {
-                string name = asset.GetProperty("name").GetString() ?? "";
-                string downloadUrl = asset.GetProperty("browser_download_url").GetString() ?? "";
-
-                if (name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
-                    return await UpdateExe(downloadUrl, name);
-
-                if (name.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))
-                    return await UpdateZip(downloadUrl, name);
-            }
-
-            App.Logger.WriteLine("GitHubUpdater", "No valid .exe or .zip asset found.");
-            return false;
+            App.Logger.WriteLine("GitHubUpdater", $"Downloading update {tag}...");
+            return await UpdateExe(LatestExeDownloadUrl, "Claudestrap.exe");
         }
         catch (Exception ex)
         {
@@ -76,33 +65,6 @@ public static class GithubUpdater
         File.Copy(exePath, currentExe, true);
 
         RestartAfterUpdate(currentExe);
-        return true;
-    }
-
-    private static async Task<bool> UpdateZip(string url, string name)
-    {
-        string tempDir = Path.Combine(Path.GetTempPath(), "Claudestrap_Update");
-        Directory.CreateDirectory(tempDir);
-
-        string zipPath = Path.Combine(tempDir, name);
-        var bytes = await http.GetByteArrayAsync(url);
-        await File.WriteAllBytesAsync(zipPath, bytes);
-
-        string extractPath = Path.Combine(tempDir, "Extracted");
-        if (Directory.Exists(extractPath)) Directory.Delete(extractPath, true);
-        ZipFile.ExtractToDirectory(zipPath, extractPath, true);
-
-        string currentDir = AppContext.BaseDirectory;
-        foreach (string file in Directory.GetFiles(extractPath, "*", SearchOption.AllDirectories))
-        {
-            string relative = Path.GetRelativePath(extractPath, file);
-            string dest = Path.Combine(currentDir, relative);
-            Directory.CreateDirectory(Path.GetDirectoryName(dest)!);
-            File.Copy(file, dest, true);
-        }
-
-        string mainExe = Path.Combine(currentDir, "Claudestrap.exe");
-        RestartAfterUpdate(mainExe);
         return true;
     }
 

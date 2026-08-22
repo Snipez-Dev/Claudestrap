@@ -317,7 +317,8 @@ namespace Claudestrap
                 if (!proceed)
                 {
                     var result = Frontend.ShowMessageBox(
-                        $"A new version of Claudestrap is available ({latestTag}). Update now?",
+                        $"A new version of Claudestrap is available ({latestTag}), and you're currently on {App.Version}.\n\n" +
+                        "Would you like to upgrade now, or stay on your current version?",
                         MessageBoxImage.Information,
                         MessageBoxButton.YesNo,
                         MessageBoxResult.Yes);
