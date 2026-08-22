@@ -396,7 +396,7 @@
             </StackPanel>
         </Expander>
 
-        <controls:OptionControl 
+        <controls:OptionControl
             Header="FPS Unlocker"
             Description="Removes the 240 FPS Limit without using FastFlags.">
             <ui:ToggleSwitch IsChecked="{Binding UncapFPS, Mode=TwoWay}" />
