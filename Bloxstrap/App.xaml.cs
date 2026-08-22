@@ -312,7 +312,7 @@ namespace Claudestrap
             if (installLocation is null)
             {
                 Logger.Initialize(true);
-                LaunchHandler.LaunchInstaller();
+                await LaunchHandler.LaunchInstaller();
             }
             else
             {
@@ -411,7 +411,7 @@ namespace Claudestrap
                     Installer.HandleUpgrade();
 
                 WindowsRegistry.RegisterApis();
-                LaunchHandler.ProcessLaunchArgs();
+                await LaunchHandler.ProcessLaunchArgs();
             }
         }
 
