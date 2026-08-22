@@ -36,7 +36,7 @@
                 Grid.Column="0"
                 Margin="0,8,8,0"
                 Command="models:GlobalViewModel.OpenWebpageCommand"
-                CommandParameter="https://github.com/Claudestrap/Claudestrap/blob/main/LICENSE.Claudestrap">
+                CommandParameter="https://github.com/Snipez-Dev/Claudestrap/blob/main/LICENSE.Claudestrap">
                 <StackPanel>
                     <TextBlock FontSize="14" Text="Claudestrap" />
                     <TextBlock

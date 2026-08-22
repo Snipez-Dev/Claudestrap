@@ -42,7 +42,7 @@ namespace Claudestrap.UI.ViewModels.About
 
             try
             {
-                SupporterData = await Http.GetJson<SupporterData>("https://raw.githubusercontent.com/Claudestrap/Claudestrap/main/supportersdata7.json");
+                SupporterData = await Http.GetJson<SupporterData>($"https://raw.githubusercontent.com/{App.ProjectRepository}/main/supportersdata7.json");
             }
             catch (Exception ex)
             {
