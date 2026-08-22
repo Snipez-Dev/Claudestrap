@@ -230,7 +230,14 @@ namespace Claudestrap
 
 #if (!DEBUG || DEBUG_UPDATER) && !QA_BUILD
             if (App.Settings.Prop.CheckForUpdates && !App.LaunchSettings.UpgradeFlag.Active)
-                await CheckAndApplyUpdate(LOG_IDENT);
+            {
+                bool updateApplied = await CheckAndApplyUpdate(LOG_IDENT);
+                if (updateApplied)
+                {
+                    Dialog?.CloseBootstrapper();
+                    return;
+                }
+            }
 #endif
 
             bool mutexExists = false;
@@ -287,13 +294,58 @@ namespace Claudestrap
             Dialog?.CloseBootstrapper();
         }
 
-        private async Task CheckAndApplyUpdate(string logIdent)
+        /// <summary>Checks GitHub for a newer tagged release and, if the user agrees
+        /// (or this is a quiet launch), downloads and applies it via <see cref="GithubUpdater"/>.
+        /// Returns true when an update was applied and the caller should stop the rest
+        /// of the bootstrap -- the process is about to restart into the new version.</summary>
+        private async Task<bool> CheckAndApplyUpdate(string logIdent)
         {
-            // GitHub-release update check is disabled — the endpoint kept reporting
-            // "current version is outdated" spuriously. Re-enable by restoring the
-            // GithubUpdater call here if the release feed becomes reliable again.
-            App.Logger.WriteLine(logIdent, "Update check skipped (GitHub API endpoint disabled).");
-            await Task.CompletedTask;
+            try
+            {
+                string? latestTag = await GithubUpdater.GetLatestVersionTagAsync().ConfigureAwait(false);
+
+                if (string.IsNullOrWhiteSpace(latestTag) || !IsNewerVersion(latestTag))
+                {
+                    App.Logger.WriteLine(logIdent, "No newer release found.");
+                    return false;
+                }
+
+                App.Logger.WriteLine(logIdent, $"Newer release found: {latestTag}");
+
+                bool proceed = App.LaunchSettings.QuietFlag.Active;
+
+                if (!proceed)
+                {
+                    var result = Frontend.ShowMessageBox(
+                        $"A new version of Claudestrap is available ({latestTag}). Update now?",
+                        MessageBoxImage.Information,
+                        MessageBoxButton.YesNo,
+                        MessageBoxResult.Yes);
+
+                    proceed = result == MessageBoxResult.Yes;
+                }
+
+                if (!proceed)
+                {
+                    App.Logger.WriteLine(logIdent, "Update declined.");
+                    return false;
+                }
+
+                SetStatus($"Updating to {latestTag}...");
+
+                bool applied = await GithubUpdater.DownloadAndInstallUpdate(latestTag).ConfigureAwait(false);
+
+                App.Logger.WriteLine(logIdent, applied
+                    ? "Update applied, restarting."
+                    : "Update download/apply failed, continuing with current version.");
+
+                return applied;
+            }
+            catch (Exception ex)
+            {
+                App.Logger.WriteLine(logIdent, $"Update check failed: {ex.Message}");
+                return false;
+            }
         }
 
         private static bool IsNewerVersion(string remoteTag)
