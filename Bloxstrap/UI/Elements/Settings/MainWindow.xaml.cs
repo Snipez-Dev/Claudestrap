@@ -1379,7 +1379,7 @@ namespace Claudestrap.UI.Elements.Settings
             new DiscordRPC.Button
             {
                 Label = "Github",  // sick of this shit ❤️‍🔥 why the fuck I put fire emoji it came out as a heart + fire fah
-                Url = "https://github.com/Claudestrap/Claudestrap"
+                Url = $"https://github.com/{App.ProjectRepository}"
             }
         }
             });

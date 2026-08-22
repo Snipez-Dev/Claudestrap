@@ -23,7 +23,7 @@ namespace Claudestrap.UI.Elements.Settings.Pages
     public partial class HubPage
     {
         private static readonly Uri ReleasesApiUri =
-            new("https://api.github.com/repos/Claudestrap/Claudestrap/releases");
+            new($"https://api.github.com/repos/{App.ProjectRepository}/releases");
 
         private static readonly HttpClient HttpClient = CreateHttpClient();
         private static readonly string CacheFile =
@@ -40,7 +40,7 @@ namespace Claudestrap.UI.Elements.Settings.Pages
         {
             var client = new HttpClient { Timeout = TimeSpan.FromSeconds(15) };
             client.DefaultRequestHeaders.UserAgent.ParseAdd(
-                "ClaudestrapApp/1.0 (+https://github.com/Claudestrap/Claudestrap)");
+                $"ClaudestrapApp/1.0 (+https://github.com/{App.ProjectRepository})");
             client.DefaultRequestHeaders.Accept.Add(
                 new MediaTypeWithQualityHeaderValue("application/json"));
             return client;

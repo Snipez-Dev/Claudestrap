@@ -191,29 +191,24 @@ namespace Claudestrap.UI.Elements.Settings.Pages
         {
             try
             {
-                string currentVersion = Assembly.GetExecutingAssembly().GetName().Version.ToString();
-                string latestVersion = await GetLatestGitHubVersion();
+                string? latestTag = await GithubUpdater.GetLatestVersionTagAsync();
 
-                if (IsNewerVersion(latestVersion, currentVersion))
+                if (string.IsNullOrWhiteSpace(latestTag))
                 {
-                    Frontend.ShowMessageBox(
-                        $"A new version ({latestVersion}) is available!"
-                    );
-                    string exeUrl = "https://github.com/Claudestrap/Claudestrap/releases/latest/download/Claudestrap.exe";
-                    string tempPath = Path.Combine(Path.GetTempPath(), "Claudestrap_update.exe");
+                    Frontend.ShowMessageBox("Could not reach GitHub to check for updates.");
+                    return;
+                }
 
-                    using (var client = new HttpClient())
-                    {
-                        client.DefaultRequestHeaders.Add("User-Agent", "Claudestrap-Updater");
-                        var data = await client.GetByteArrayAsync(exeUrl);
-                        await File.WriteAllBytesAsync(tempPath, data);
-                    }
-                    Process.Start(new ProcessStartInfo
-                    {
-                        FileName = tempPath,
-                        UseShellExecute = true
-                    });
-                    Application.Current.Shutdown();
+                string currentVersion = Assembly.GetExecutingAssembly().GetName().Version!.ToString();
+
+                if (IsNewerVersion(latestTag, currentVersion))
+                {
+                    Frontend.ShowMessageBox($"A new version ({latestTag}) is available! Downloading and installing now...");
+
+                    bool applied = await GithubUpdater.DownloadAndInstallUpdate(latestTag);
+
+                    if (!applied)
+                        Frontend.ShowMessageBox("Failed to download or apply the update. Try again later.");
                 }
                 else
                 {
@@ -228,18 +223,6 @@ namespace Claudestrap.UI.Elements.Settings.Pages
                     $"Error checking for updates:\n{ex.Message}"
                 );
             }
-        }
-
-        private async Task<string> GetLatestGitHubVersion()
-        {
-            using var client = new HttpClient();
-            client.DefaultRequestHeaders.Add("User-Agent", "Claudestrap-Updater");
-
-            string apiUrl = "https://api.github.com/repos/Claudestrap/Claudestrap/releases/latest";
-            string json = await client.GetStringAsync(apiUrl);
-
-            using var doc = JsonDocument.Parse(json);
-            return doc.RootElement.GetProperty("tag_name").GetString();
         }
 
         private bool IsNewerVersion(string latest, string current)

@@ -90,7 +90,7 @@
                 Margin="0,0,8,0"
                 Content="{x:Static resources:Strings.Menu_About_ReportIssue}"
                 Icon="BookExclamationMark24"
-                NavigateUri="https://github.com/Claudestrap/Claudestrap/issues" />
+                NavigateUri="https://github.com/Snipez-Dev/Claudestrap/issues" />
             <ui:Anchor
                 Margin="0,0,8,0"
                 Content="Website"
