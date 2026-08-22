@@ -13,12 +13,13 @@ public static class GithubUpdater
         DefaultRequestHeaders = { { "User-Agent", "Claudestrap-Updater" } }
     };
 
+    private static string LatestReleaseUrl => $"https://api.github.com/repos/{App.ProjectRepository}/releases/latest";
+
     public static async Task<string?> GetLatestVersionTagAsync()
     {
         try
         {
-            string url = "https://api.github.com/repos/Claudestrap/Claudestrap/releases/latest";
-            string response = await http.GetStringAsync(url);
+            string response = await http.GetStringAsync(LatestReleaseUrl);
             using var doc = JsonDocument.Parse(response);
             return doc.RootElement.GetProperty("tag_name").GetString();
         }
@@ -33,8 +34,7 @@ public static class GithubUpdater
     {
         try
         {
-            string url = "https://api.github.com/repos/Claudestrap/Claudestrap/releases/latest";
-            string response = await http.GetStringAsync(url);
+            string response = await http.GetStringAsync(LatestReleaseUrl);
             using var doc = JsonDocument.Parse(response);
             var assets = doc.RootElement.GetProperty("assets");
 

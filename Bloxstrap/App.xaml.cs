@@ -24,11 +24,11 @@ namespace Claudestrap
 #else
         public const string ProjectName = "Claudestrap";
 #endif
-        public const string ProjectOwner = "Claudestrap";
-        public const string ProjectRepository = "/Claudestrap/Claudestrap/";
-        public const string ProjectDownloadLink = "https://github.com/Claudestrap/Claudestrap/releases";
+        public const string ProjectOwner = "Snipez-Dev";
+        public const string ProjectRepository = "Snipez-Dev/Claudestrap";
+        public const string ProjectDownloadLink = "https://github.com/Snipez-Dev/Claudestrap/releases";
         public const string ProjectHelpLink = "https://github.com/BloxstrapLabs/Bloxstrap/wiki";
-        public const string ProjectSupportLink = "https://github.com/Claudestrap/Claudestrap/issues/new";
+        public const string ProjectSupportLink = "https://github.com/Snipez-Dev/Claudestrap/issues/new";
 
         public const string RobloxPlayerAppName = "RobloxPlayerBeta";
         public const string RobloxStudioAppName = "RobloxStudioBeta";
