@@ -1,130 +1,89 @@
 <p align="center">
-<a href="https://Claudestrapp.netlify.app/">
-<img src="https://raw.githubusercontent.com/Claudestrap/Claudestrap/main/Bloxstrap/Claudestrap.png" alt="preview" width="100px"/>
-</a>
+  <img src="Bloxstrap/Claudestrap.png" alt="Claudestrap" width="100px"/>
 </p>
 
-<h1 align="center"><b>Claudestrap</b></h1>
+<h1 align="center">Claudestrap</h1>
 
 <p align="center">
-<img src="https://raw.githubusercontent.com/KloBraticc/RandomMods/main/Untitled%20design%20(2)-Photoroom.png" alt="preview" width="100%"/>
+  A modified, feature-extended fork of the <a href="https://github.com/bloxstraplabs/bloxstrap">Bloxstrap</a> Roblox bootstrapper for Windows.
 </p>
 
 <p align="center">
-  <a href="github.com/Claudestrap/Claudestrap/releases/latest">Latest release</a> |
-  <a href="https://www.youtube.com/watch?v=P-GqTUo_HIA&t">Tutorial</a> |
-  <a href="https://Claudestrapp.netlify.app/donate/donate">Donate</a> |
-  <a href="https://discord.gg/5tJBqBH8ck">Discord</a>
+  <a href="https://github.com/Snipez-Dev/Claudestrap/releases/latest">Latest release</a> ·
+  <a href="https://github.com/Snipez-Dev/Claudestrap/issues">Issues</a> ·
+  <a href="#building-from-source">Building from source</a>
 </p>
-
-<div align="center">
-
-[![Total Downloads][shield-repo-total]][repo-releases]
-[![Latest Downloads][shield-repo-downloads]][repo-latest]
-[![Latest Release][shield-repo-latest]][repo-latest]
-[![Discord][shield-discord-server]][discord-invite]
-[![Stars][shield-repo-stars]][repo-stargazers]
-
-</div>
-
-<h5 align="center">
-Leave a star if you like the project! ⭐️
-</h5>
 
 > [!IMPORTANT]
-> Claudestrap currently supports **Windows 10 and above**.  
-> **macOS support is in the works**, but it is not available yet.
->
-> In the meantime, you can use **[AppleBlox](https://github.com/AppleBlox/appleblox)** *(for macOS)* or **[Sober](https://sober.vinegarhq.org/)** *(for Linux)*.  
-> More experienced Linux users can also try tools like **[Lution](https://github.com/wookhq/Lution)**.
+> Claudestrap supports **Windows 10 and above** only.
+
+## What is this?
+
+Claudestrap replaces the standard Roblox bootstrapper with one that manages its own
+Roblox installation, gives you a custom launch UI, and adds a pile of extra features
+on top of stock Bloxstrap:
+
+- Multi-account manager — sign in through an embedded Roblox login page or a pasted
+  `.ROBLOSECURITY` cookie, save multiple accounts, and switch between them from the
+  launch menu without leaving the app
+- Executor version sync — optionally pin the installed Roblox build to whatever
+  version your selected script executor currently supports (via WEAO/RDD), instead
+  of always tracking the live release
+- Discord Rich Presence, an activity/server history log, FastFlag and mod editors,
+  a custom bootstrapper style/theme editor, and the usual Bloxstrap settings surface
+- Self-updating: checks a plain [`version.txt`](version.txt) in this repo on launch
+  and prompts to upgrade when a newer build is available (see [Updating](#updating))
 
 ## Installation
 
-1. Download the latest version
-   👉 https://github.com/Claudestrap/Claudestrap/releases/latest
-2. Run the Exe and Finish the setup
+1. Download the latest installer from the
+   [releases page](https://github.com/Snipez-Dev/Claudestrap/releases/latest)
+2. Run it and finish the setup
 3. Launch Claudestrap
-4. Enjoy a more simple Roblox
 
----
+## Updating
 
-## Frequently Asked Questions (FAQ)
+Claudestrap checks [`version.txt`](version.txt) in this repo against its own build
+version on every launch. If a newer version is available, you'll be asked whether to
+upgrade now or stay on your current version — nothing downloads or installs without
+that confirmation. You can also trigger a check manually from **Settings → Channel →
+Check for Updates**, and turn the automatic check off entirely from the same page.
 
-<details>
-  <summary><strong>Can it get you banned?</strong></summary>
-  <br>
+## Building from source
 
-  No. Claudestrap does not inject cheats, exploits, or bypass Roblox security.  
-  It functions as a launcher and configuration manager. However, as with any third-party tool, use it at your own discretion.
-</details>
+Requirements: **.NET 9 SDK** and **Windows** (this is a WPF app; it won't build on
+other platforms).
 
-<br>
+```sh
+git clone https://github.com/Snipez-Dev/Claudestrap.git
+cd Claudestrap
+dotnet build Claudestrap.sln -c Release
+```
 
-<details>
-  <summary><strong>Is it a virus?</strong></summary>
-  <br>
+The `wpfui` UI library this project depends on is vendored directly under
+[`wpfui/`](wpfui/) — no submodule init step needed, a plain clone is enough to build.
 
-  No. Claudestrap is fully open-source, meaning anyone can inspect the code.  
-  If your antivirus flags it, it is most likely a false positive due to how launchers interact with Roblox processes and updates.
+To produce a self-contained single-file build the same way the release workflow does:
 
-  You can verify the source code yourself at:
-  https://github.com/Claudestrap/Claudestrap
-  or just scroll up dummy <!-- hada add this -->
-</details>
+```sh
+dotnet publish Bloxstrap/Claudestrap.csproj -c Release -r win-x64 --self-contained -p:PublishSingleFile=true -o publish
+```
 
-<!-- Removed build will prob show how to do that in a later date im lazy for rn -->
-## How to Fork
+## Is it safe?
 
-<p align="left">
-  <a href="https://www.w3schools.com/cs/" target="_blank" rel="noreferrer">
-    <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/csharp/csharp-original.svg" alt="csharp" width="40" height="40"/>
-    <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/dot-net/dot-net-original-wordmark.svg" alt="dotnet" width="40" height="40"/>
-  </a>
-</p>
+Claudestrap doesn't inject cheats or bypass Roblox's anti-cheat on its own — it's a
+launcher and configuration manager. The executor-sync feature is opt-in and only
+pins which Roblox build gets installed; it doesn't do anything by itself. As with any
+third-party Roblox tool, use it at your own discretion, and feel free to read the
+source yourself — that's what it's here for.
 
-Claudestrap is built using **C# and .NET**.
+## License
 
----
-
-### Fork the Repository
-
-1. Go to:  
-   https://github.com/Claudestrap/Claudestrap
-2. Click **Fork** (top right)
-3. This creates your own copy under your GitHub account
-
-<table style="width: 100%; border-collapse: collapse;">
-  <tr>
-    <td style="width: 33%; text-align: left;">© Claudestrap</td>
-    <td style="width: 33%; text-align: right;"><a href="https://github.com/Claudestrap/Claudestrap/blob/main/LICENSE.Claudestrap" target="_blank">MIT</a></td>
-  </tr>
-</table>
-
-## Star History
-
-<p align="center">
-  <a href="https://www.star-history.com/?repos=Claudestrap%2FClaudestrap%2CKloBraticc%2FClaudestrap&type=timeline&legend=top-left">
-    <img src="https://api.star-history.com/svg?repos=Claudestrap%2FClaudestrap%2CKloBraticc%2FClaudestrap&type=timeline&legend=top-left&theme=dark" />
-  </a>
-</p>
-
-<p align="center">
-  <a href="https://discord.gg/5tJBqBH8ck">
-    <img src="https://invidget.switchblade.xyz/5tJBqBH8ck">
-  </a>
-</p>
+MIT, same as upstream Bloxstrap. See [`LICENSE`](LICENSE) for the full text and
+[`LICENSE.BLOXSTRAP`](LICENSE.BLOXSTRAP) / [`LICENSE.FISHSTRAP`](LICENSE.FISHSTRAP)
+for the forks this project builds on. The vendored [`wpfui`](wpfui/) library is also
+MIT-licensed — see [`wpfui/LICENSE`](wpfui/LICENSE).
 
 > [!NOTE]
-> Claudestrap is still in **early development**, even though the project has existed for over **2 years**.  
-> Features may change and some things may still be unfinished.
-
-[shield-repo-downloads]:  https://img.shields.io/github/downloads/Claudestrap/Claudestrap/latest/total?color=981bfe
-[shield-repo-total]:      https://img.shields.io/github/downloads/Claudestrap/Claudestrap/total?color=8a2be2
-[shield-repo-latest]:     https://img.shields.io/github/v/release/Claudestrap/Claudestrap?color=7a39fb
-[shield-repo-stars]:      https://img.shields.io/github/stars/Claudestrap/Claudestrap?color=ffd700
-[shield-discord-server]:  https://img.shields.io/discord/1327967202015580223?logo=discord&logoColor=white&label=Discord&color=4d3dff
-
-[repo-releases]:          https://github.com/Claudestrap/Claudestrap/releases
-[repo-latest]:            https://github.com/Claudestrap/Claudestrap/releases/latest
-[repo-stargazers]:        https://github.com/Claudestrap/Claudestrap/stargazers
-[discord-invite]:         https://discord.gg/dfA9PdWgcV
+> Claudestrap is under active development. Features may change and some things may
+> still be unfinished.
