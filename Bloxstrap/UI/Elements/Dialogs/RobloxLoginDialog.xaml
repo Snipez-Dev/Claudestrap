@@ -25,12 +25,12 @@
     mc:Ignorable="d">
 
     <Window.Resources>
-        <SolidColorBrush x:Key="BackgroundBase"   po:Freeze="True" Color="#121212" />
-        <SolidColorBrush x:Key="TextPrimary"      po:Freeze="True" Color="#E7E7E7" />
-        <SolidColorBrush x:Key="TextDescription"  po:Freeze="True" Color="#5E5E5E" />
-        <SolidColorBrush x:Key="IconColor"        po:Freeze="True" Color="#707070" />
-        <SolidColorBrush x:Key="IconHover"        po:Freeze="True" Color="#BFBFBF" />
-        <SolidColorBrush x:Key="BorderSubtle"     po:Freeze="True" Color="#0AFFFFFF" />
+        <SolidColorBrush x:Key="BackgroundBase"   po:Freeze="True" Color="#0F1015" />
+        <SolidColorBrush x:Key="TextPrimary"      po:Freeze="True" Color="#ECEBF5" />
+        <SolidColorBrush x:Key="TextDescription"  po:Freeze="True" Color="#6C6C82" />
+        <SolidColorBrush x:Key="IconColor"        po:Freeze="True" Color="#7C7D93" />
+        <SolidColorBrush x:Key="IconHover"        po:Freeze="True" Color="#C9C9DF" />
+        <SolidColorBrush x:Key="BorderSubtle"     po:Freeze="True" Color="#1E6C63F0" />
 
         <Style x:Key="TitleIconStyle" TargetType="Button">
             <Setter Property="Foreground" Value="{StaticResource IconColor}" />

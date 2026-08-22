@@ -15,12 +15,12 @@ namespace Claudestrap.UI.Elements.Base
     /// </summary>
     public abstract class WpfUiWindow : UiWindow, IDisposable
     {
-        // Claude's brand coral/orange -- applied in place of the Windows system accent
-        // color (which is whatever the user picked in Settings > Personalization, e.g.
-        // purple) so accented controls (progress bars/rings, toggles, etc.) match the
-        // Claudestrap branding instead of drifting with the OS accent.
+        // Claudestrap's accent (indigo-violet, matching the launch menu/dialog redesign) --
+        // applied in place of the Windows system accent color (which is whatever the user
+        // picked in Settings > Personalization) so accented controls (progress bars/rings,
+        // toggles, etc.) match the Claudestrap branding instead of drifting with the OS accent.
         private static readonly System.Windows.Media.Color ClaudeAccentColor =
-            System.Windows.Media.Color.FromRgb(0xDA, 0x77, 0x56);
+            System.Windows.Media.Color.FromRgb(0x5B, 0x4F, 0xE0);
 
         private readonly IThemeService _themeService = new ThemeService();
         private ThemeType? _lastAppliedTheme = null;

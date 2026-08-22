@@ -53,23 +53,15 @@
             <GradientStop Color="#00000000" Offset="1.0"/>
         </LinearGradientBrush>
 
-        <!-- ============ WEAO palette + dot pattern (shared with the launcher) ============ -->
-        <SolidColorBrush x:Key="WeaoBackgroundBase" po:Freeze="True" Color="#121212" />
-        <DrawingBrush x:Key="WeaoDotPattern" po:Freeze="True"
-                      TileMode="Tile"
-                      Viewport="0,0,20,20" ViewportUnits="Absolute"
-                      Stretch="None">
-            <DrawingBrush.Drawing>
-                <GeometryDrawing>
-                    <GeometryDrawing.Brush>
-                        <SolidColorBrush Color="#5A5A5A" Opacity="0.7" />
-                    </GeometryDrawing.Brush>
-                    <GeometryDrawing.Geometry>
-                        <EllipseGeometry Center="10,10" RadiusX="1" RadiusY="1" />
-                    </GeometryDrawing.Geometry>
-                </GeometryDrawing>
-            </DrawingBrush.Drawing>
-        </DrawingBrush>
+        <!-- ============ Background base + glow (shared with the launcher/bootstrapper) ============ -->
+        <SolidColorBrush x:Key="WeaoBackgroundBase" po:Freeze="True" Color="#0F1015" />
+        <RadialGradientBrush x:Key="WeaoDotPattern" po:Freeze="True"
+                              Center="0.82,0.05" GradientOrigin="0.82,0.05"
+                              RadiusX="0.85" RadiusY="1.05">
+            <GradientStop Offset="0"    Color="#3D6C63F0" />
+            <GradientStop Offset="0.55" Color="#146C63F0" />
+            <GradientStop Offset="1"    Color="#006C63F0" />
+        </RadialGradientBrush>
 
         <Storyboard x:Key="LightningStoryboard"
                     RepeatBehavior="Forever">
