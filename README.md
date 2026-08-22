@@ -79,10 +79,9 @@ source yourself — that's what it's here for.
 
 ## License
 
-MIT, same as upstream Bloxstrap. See [`LICENSE`](LICENSE) for the full text and
-[`LICENSE.BLOXSTRAP`](LICENSE.BLOXSTRAP) / [`LICENSE.FISHSTRAP`](LICENSE.FISHSTRAP)
-for the forks this project builds on. The vendored [`wpfui`](wpfui/) library is also
-MIT-licensed — see [`wpfui/LICENSE`](wpfui/LICENSE).
+MIT — see [`LICENSE`](LICENSE). Claudestrap is a fork of Bloxstrap (by way of
+Fishstrap), both also MIT-licensed. The vendored [`wpfui`](wpfui/) library is
+separately MIT-licensed — see [`wpfui/LICENSE`](wpfui/LICENSE).
 
 > [!NOTE]
 > Claudestrap is under active development. Features may change and some things may
