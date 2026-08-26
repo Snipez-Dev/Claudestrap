@@ -53,7 +53,7 @@
                         <TextBlock Text="Deine Discord-App-ID (discord.com/developers). Leer = Claudestrap-Standard."
                                    FontSize="11" Foreground="Gray" Margin="0,2,0,4" TextWrapping="Wrap"/>
                         <ui:TextBox Text="{Binding ApplicationId, UpdateSourceTrigger=PropertyChanged}"
-                                    PlaceholderText="1005469189907173486"/>
+                                    PlaceholderText="1527407497311158522"/>
 
                         <TextBlock Text="App Name" Margin="0,10,0,0"/>
                         <ui:TextBox Text="{Binding AppName, UpdateSourceTrigger=PropertyChanged}"/>

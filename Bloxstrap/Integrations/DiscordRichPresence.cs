@@ -17,7 +17,7 @@ namespace Claudestrap.Integrations
     {
         private readonly DiscordRpcClient _rpcClient = new(
             string.IsNullOrWhiteSpace(App.Settings.Prop.DiscordRpcAppId)
-                ? "1005469189907173486"
+                ? "1527407497311158522"
                 : App.Settings.Prop.DiscordRpcAppId);
         private readonly ActivityWatcher _activityWatcher;
         private readonly ConcurrentQueue<Message> _messageQueue = new();
