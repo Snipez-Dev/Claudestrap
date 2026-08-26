@@ -462,6 +462,10 @@ Margin="8,0,8,0" />
                         </ComboBox.ItemTemplate>
                     </ComboBox>
                 </controls:OptionControl>
+
+                <controls:OptionControl Description="Forces Roblox's own menus and UI to use its dark color theme instead of the default light theme." Header="Black Mode (Dark UI Theme)">
+                    <ui:ToggleSwitch IsChecked="{Binding EnableDarkMode, Mode=TwoWay}" />
+                </controls:OptionControl>
             </StackPanel>
         </ui:CardExpander>
 

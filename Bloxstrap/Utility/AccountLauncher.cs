@@ -66,6 +66,17 @@ namespace Claudestrap.Utility
                 App.Logger.WriteLine(LOG_IDENT, "Multi-instance launching enabled, preparing singleton bypass");
                 MultiInstance.PrepareForLaunch();
             }
+            else if (RobloxProcessDetector.IsPlayerRunning())
+            {
+                // Without multi-instance bypass, Roblox's own singleton check makes a new
+                // launch just hand its args to whichever client is already running and
+                // exit -- so the still-open client (signed in as whatever account it
+                // started with) never sees this account's fresh auth ticket. Close it
+                // first so the process we spawn below is the one that actually claims
+                // the singleton and signs in as the requested account.
+                App.Logger.WriteLine(LOG_IDENT, "Another account is already running, closing it before switching");
+                CloseRunningPlayer();
+            }
 
             try
             {
@@ -85,6 +96,32 @@ namespace Claudestrap.Utility
 
             App.Logger.WriteLine(LOG_IDENT, $"Launched Roblox for {account.Username}");
             return new LaunchResult(true, null);
+        }
+
+        private static void CloseRunningPlayer()
+        {
+            const string LOG_IDENT = "AccountLauncher::CloseRunningPlayer";
+
+            foreach (var process in RobloxProcessDetector.GetLivePlayerProcesses())
+            {
+                try
+                {
+                    if (process.HasExited)
+                        continue;
+
+                    process.CloseMainWindow();
+                    if (!process.WaitForExit(3000))
+                        process.Kill(entireProcessTree: true);
+                }
+                catch (Exception ex)
+                {
+                    App.Logger.WriteLine(LOG_IDENT, $"Failed to close pid {process.Id}: {ex.Message}");
+                }
+                finally
+                {
+                    process.Dispose();
+                }
+            }
         }
     }
 }

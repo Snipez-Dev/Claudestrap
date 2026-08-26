@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows;
 using Claudestrap;
+using Claudestrap.UI;
 
 public static class GithubUpdater
 {
@@ -75,6 +76,14 @@ public static class GithubUpdater
 
             bool applied = await DownloadAndInstallUpdate(latestTag);
             App.Logger.WriteLine("GitHubUpdater", applied ? "Update applied, restarting." : "Update failed.");
+
+            if (!applied)
+            {
+                Frontend.ShowMessageBox(
+                    "Downloading or installing the update failed. Claudestrap will keep running on the current version -- check the log for details, or update manually from the GitHub releases page.",
+                    MessageBoxImage.Warning);
+            }
+
             return applied;
         }
         catch (Exception ex)
@@ -129,28 +138,54 @@ public static class GithubUpdater
 
         string exePath = Path.Combine(tempDir, name);
         var bytes = await http.GetByteArrayAsync(url);
+
+        if (bytes.Length == 0)
+        {
+            App.Logger.WriteLine("GitHubUpdater", "Downloaded update was empty, aborting.");
+            return false;
+        }
+
         await File.WriteAllBytesAsync(exePath, bytes);
 
         string currentExe = Environment.ProcessPath!;
         string backupExe = currentExe + ".old";
         if (File.Exists(backupExe)) File.Delete(backupExe);
         File.Move(currentExe, backupExe);
-        File.Copy(exePath, currentExe, true);
 
-        RestartAfterUpdate(currentExe);
-        return true;
-    }
-
-    private static void RestartAfterUpdate(string exePath)
-    {
-        Task.Delay(800).ContinueWith(_ =>
+        try
         {
+            File.Copy(exePath, currentExe, true);
+
             Process.Start(new ProcessStartInfo
             {
-                FileName = exePath,
+                FileName = currentExe,
                 UseShellExecute = true
             });
-            Environment.Exit(0);
-        });
+        }
+        catch (Exception ex)
+        {
+            // Couldn't finish the swap or launch the new build -- restore the exe this
+            // process is actually running from so a manual restart still works, instead
+            // of silently leaving the old build running with nothing telling the user
+            // the update never actually applied.
+            App.Logger.WriteLine("GitHubUpdater", $"Swap/restart failed, rolling back: {ex.Message}");
+
+            try
+            {
+                if (File.Exists(currentExe)) File.Delete(currentExe);
+                File.Move(backupExe, currentExe);
+            }
+            catch (Exception rollbackEx)
+            {
+                App.Logger.WriteLine("GitHubUpdater", $"Rollback failed: {rollbackEx.Message}");
+            }
+
+            return false;
+        }
+
+        // The new process is up and reading from currentExe; this one's file handle
+        // (backupExe) is no longer needed, so exit immediately rather than racing it.
+        Environment.Exit(0);
+        return true;
     }
 }

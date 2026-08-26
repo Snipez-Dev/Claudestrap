@@ -40,6 +40,10 @@ namespace Claudestrap.Utility
         public static List<Process> GetLiveProcesses()
             => GetLiveProcesses(PlayerProcessNames.Concat(StudioProcessNames));
 
+        /// <summary>Live Roblox player processes only (excludes Studio), ghosts excluded.</summary>
+        public static List<Process> GetLivePlayerProcesses()
+            => GetLiveProcesses(PlayerProcessNames);
+
         private static bool HasLiveProcess(IEnumerable<string> names)
         {
             var live = GetLiveProcesses(names);
