@@ -1216,6 +1216,18 @@ namespace Claudestrap.UI.ViewModels.Settings
             set => App.FastFlags.SetPreset("Rendering.MinimalRendering", value ? "True" : null);
         }
 
+        public bool PhysicsSkipStep
+        {
+            get => App.FastFlags.GetPreset("Physics.SkipRenderedStep") == "True";
+            set => App.FastFlags.SetPreset("Physics.SkipRenderedStep", value ? "True" : null);
+        }
+
+        public bool DisableAmbientOcclusion
+        {
+            get => App.FastFlags.GetPreset("Rendering.NoAmbientOcclusion") == "True";
+            set => App.FastFlags.SetPreset("Rendering.NoAmbientOcclusion", value ? "True" : null);
+        }
+
         public bool DisableSky
         {
             get => App.FastFlags.GetPreset("Rendering.NoFrmBloom") == "False";
