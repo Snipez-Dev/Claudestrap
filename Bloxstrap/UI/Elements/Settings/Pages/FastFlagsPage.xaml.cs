@@ -193,6 +193,11 @@ namespace Claudestrap.UI.Elements.Settings.Pages
             NavigationService.Navigate(new NvidiaFastFlagsPage());
         }
 
+        private void OpenAmdSettings_Click(object sender, RoutedEventArgs e)
+        {
+            NavigationService.Navigate(new AmdFastFlagsPage());
+        }
+
         private bool IsVulkanSelected()
         {
             if (_viewModel?.SelectedRenderingMode == null)

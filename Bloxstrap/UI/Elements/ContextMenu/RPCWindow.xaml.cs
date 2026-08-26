@@ -11,5 +11,12 @@ namespace Claudestrap.UI.Elements.ContextMenu
             InitializeComponent();
             DataContext = new RPCCustomizerViewModel();
         }
+
+        private void SaveRpcSettings_Click(object sender, RoutedEventArgs e)
+        {
+            App.Settings.Save();
+            MessageBox.Show("RPC-Einstellungen gespeichert! Starte Roblox neu damit sie wirksam werden.",
+                "Gespeichert", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
     }
 }
