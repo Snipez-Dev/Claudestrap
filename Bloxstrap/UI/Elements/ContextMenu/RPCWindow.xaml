@@ -52,17 +52,17 @@
                         <TextBlock Text="Application ID" FontWeight="SemiBold"/>
                         <TextBlock Text="Deine Discord-App-ID (discord.com/developers). Leer = Claudestrap-Standard."
                                    FontSize="11" Foreground="Gray" Margin="0,2,0,4" TextWrapping="Wrap"/>
-                        <TextBox Text="{Binding ApplicationId, UpdateSourceTrigger=PropertyChanged}"
-                                 PlaceholderText="1005469189907173486"/>
+                        <ui:TextBox Text="{Binding ApplicationId, UpdateSourceTrigger=PropertyChanged}"
+                                    PlaceholderText="1005469189907173486"/>
 
                         <TextBlock Text="App Name" Margin="0,10,0,0"/>
-                        <TextBox Text="{Binding AppName, UpdateSourceTrigger=PropertyChanged}"/>
+                        <ui:TextBox Text="{Binding AppName, UpdateSourceTrigger=PropertyChanged}"/>
 
                         <TextBlock Text="Details" Margin="0,10,0,0"/>
-                        <TextBox Text="{Binding Details, UpdateSourceTrigger=PropertyChanged}"/>
+                        <ui:TextBox Text="{Binding Details, UpdateSourceTrigger=PropertyChanged}"/>
 
                         <TextBlock Text="State" Margin="0,10,0,0"/>
-                        <TextBox Text="{Binding State, UpdateSourceTrigger=PropertyChanged}"/>
+                        <ui:TextBox Text="{Binding State, UpdateSourceTrigger=PropertyChanged}"/>
                     </StackPanel>
                 </ui:Card>
 
@@ -78,20 +78,20 @@
                         <CheckBox Content="&quot;Join Server&quot;-Button anzeigen" IsChecked="{Binding RpcShowJoinButton}" Margin="0,6,0,0"/>
 
                         <TextBlock Text="'Join Server' Button-Label" Margin="0,10,0,2"/>
-                        <TextBox Text="{Binding RpcJoinButtonLabel, UpdateSourceTrigger=PropertyChanged}"
-                                 PlaceholderText="Join server"/>
+                        <ui:TextBox Text="{Binding RpcJoinButtonLabel, UpdateSourceTrigger=PropertyChanged}"
+                                    PlaceholderText="Join server"/>
 
                         <TextBlock Text="'Game Page' Button-Label" Margin="0,8,0,2"/>
-                        <TextBox Text="{Binding RpcGamePageButtonLabel, UpdateSourceTrigger=PropertyChanged}"
-                                 PlaceholderText="Game Page"/>
+                        <ui:TextBox Text="{Binding RpcGamePageButtonLabel, UpdateSourceTrigger=PropertyChanged}"
+                                    PlaceholderText="Game Page"/>
 
                         <TextBlock Text="Großes Bild — eigener Text (leer = Spielname)" Margin="0,8,0,2"/>
-                        <TextBox Text="{Binding RpcCustomLargeImageText, UpdateSourceTrigger=PropertyChanged}"
-                                 PlaceholderText="z.B. Claudestrap by Snipez &amp; DEERSTUDIO"/>
+                        <ui:TextBox Text="{Binding RpcCustomLargeImageText, UpdateSourceTrigger=PropertyChanged}"
+                                    PlaceholderText="z.B. Claudestrap by Snipez &amp; DEERSTUDIO"/>
 
                         <TextBlock Text="Kleines Bild — eigener Text (leer = Accountname)" Margin="0,8,0,2"/>
-                        <TextBox Text="{Binding RpcCustomSmallImageText, UpdateSourceTrigger=PropertyChanged}"
-                                 PlaceholderText="z.B. Powered by Claudestrap"/>
+                        <ui:TextBox Text="{Binding RpcCustomSmallImageText, UpdateSourceTrigger=PropertyChanged}"
+                                    PlaceholderText="z.B. Powered by Claudestrap"/>
 
                         <ui:Button Content="Speichern" Appearance="Primary" Click="SaveRpcSettings_Click"
                                    Margin="0,12,0,0" Icon="Save24"/>
@@ -103,10 +103,10 @@
                     <StackPanel Margin="10">
                         <TextBlock Text="Bilder — Manuelle RPC (keys from Developer Portal)" FontWeight="SemiBold"/>
                         <TextBlock Text="Large Image Key" Margin="0,6,0,0"/>
-                        <TextBox Text="{Binding LargeImageKey, UpdateSourceTrigger=PropertyChanged}"/>
+                        <ui:TextBox Text="{Binding LargeImageKey, UpdateSourceTrigger=PropertyChanged}"/>
 
                         <TextBlock Text="Small Image Key" Margin="0,10,0,0"/>
-                        <TextBox Text="{Binding SmallImageKey, UpdateSourceTrigger=PropertyChanged}"/>
+                        <ui:TextBox Text="{Binding SmallImageKey, UpdateSourceTrigger=PropertyChanged}"/>
                     </StackPanel>
                 </ui:Card>
 
@@ -118,18 +118,18 @@
                         <!-- Button 1 -->
                         <CheckBox Content="Button 1 aktivieren" IsChecked="{Binding Button1Enabled}"/>
                         <TextBlock Text="Label" Margin="0,6,0,0"/>
-                        <TextBox Text="{Binding Button1Label, UpdateSourceTrigger=PropertyChanged}"/>
+                        <ui:TextBox Text="{Binding Button1Label, UpdateSourceTrigger=PropertyChanged}"/>
                         <TextBlock Text="URL" Margin="0,6,0,0"/>
-                        <TextBox Text="{Binding Button1Url, UpdateSourceTrigger=PropertyChanged}"/>
+                        <ui:TextBox Text="{Binding Button1Url, UpdateSourceTrigger=PropertyChanged}"/>
 
                         <Separator Margin="0,10,0,10"/>
 
                         <!-- Button 2 -->
                         <CheckBox Content="Button 2 aktivieren" IsChecked="{Binding Button2Enabled}"/>
                         <TextBlock Text="Label" Margin="0,6,0,0"/>
-                        <TextBox Text="{Binding Button2Label, UpdateSourceTrigger=PropertyChanged}"/>
+                        <ui:TextBox Text="{Binding Button2Label, UpdateSourceTrigger=PropertyChanged}"/>
                         <TextBlock Text="URL" Margin="0,6,0,0"/>
-                        <TextBox Text="{Binding Button2Url, UpdateSourceTrigger=PropertyChanged}"/>
+                        <ui:TextBox Text="{Binding Button2Url, UpdateSourceTrigger=PropertyChanged}"/>
                     </StackPanel>
                 </ui:Card>
             </StackPanel>

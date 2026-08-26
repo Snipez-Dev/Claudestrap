@@ -6,8 +6,13 @@
     xmlns:settings="clr-namespace:Claudestrap.UI.ViewModels.Settings"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
     xmlns:models="clr-namespace:Claudestrap.UI.ViewModels"
+    xmlns:converters="clr-namespace:Claudestrap.UI.Converters"
     Title="AMD Graphics Settings"
     Scrollable="True">
+
+    <ui:UiPage.Resources>
+        <converters:InverseBooleanConverter x:Key="InverseBoolConverter"/>
+    </ui:UiPage.Resources>
 
     <StackPanel Margin="0,0,14,14">
 
