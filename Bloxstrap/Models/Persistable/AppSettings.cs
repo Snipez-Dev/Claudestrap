@@ -117,6 +117,24 @@ namespace Claudestrap.Models.Persistable
         public bool MultiAccount { get; set; } = false;
         public bool ShowServerDetails { get; set; } = true;
 
+        // RPC — erweiterte Einstellungen
+        /// <summary>Discord Application ID. Leer = Claudestrap-Standard.</summary>
+        public string DiscordRpcAppId { get; set; } = "1005469189907173486";
+        /// <summary>Zeigt den Spielzeit-Timer in der RPC an.</summary>
+        public bool RpcShowTimestamp { get; set; } = true;
+        /// <summary>Eigener Text unter dem großen Bild.</summary>
+        public string RpcCustomLargeImageText { get; set; } = "";
+        /// <summary>Eigener Text unter dem kleinen Bild (leer = Accountname).</summary>
+        public string RpcCustomSmallImageText { get; set; } = "";
+        /// <summary>Label für den "Join Server"-Button.</summary>
+        public string RpcJoinButtonLabel { get; set; } = "Join server";
+        /// <summary>Label für den "Game Page"-Button.</summary>
+        public string RpcGamePageButtonLabel { get; set; } = "Game Page";
+        /// <summary>Zeigt den "Game Page"-Button an.</summary>
+        public bool RpcShowGamePageButton { get; set; } = true;
+        /// <summary>Zeigt den "Join Server"-Button an.</summary>
+        public bool RpcShowJoinButton { get; set; } = true;
+
         public bool OverlaysEnabled { get; set; } = false;
 
         public double Brightness { get; set; } = 50;

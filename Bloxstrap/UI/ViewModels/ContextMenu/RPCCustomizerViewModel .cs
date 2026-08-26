@@ -107,6 +107,53 @@ namespace Claudestrap.UI.ViewModels.ContextMenu
 
         public string StatusMessage { get => _statusMessage; set => SetField(ref _statusMessage, value); }
         public Brush StatusColor { get => _statusColor; set => SetField(ref _statusColor, value); }
+
+        // ── Claudestrap Game-RPC Settings (direkt in AppSettings) ─────────
+        public bool RpcShowTimestamp
+        {
+            get => App.Settings.Prop.RpcShowTimestamp;
+            set => App.Settings.Prop.RpcShowTimestamp = value;
+        }
+
+        public bool RpcShowGamePageButton
+        {
+            get => App.Settings.Prop.RpcShowGamePageButton;
+            set => App.Settings.Prop.RpcShowGamePageButton = value;
+        }
+
+        public bool RpcShowJoinButton
+        {
+            get => App.Settings.Prop.RpcShowJoinButton;
+            set => App.Settings.Prop.RpcShowJoinButton = value;
+        }
+
+        public string RpcJoinButtonLabel
+        {
+            get => App.Settings.Prop.RpcJoinButtonLabel;
+            set { App.Settings.Prop.RpcJoinButtonLabel = value; SetField(ref _rpcJoinButtonLabel, value); }
+        }
+        private string _rpcJoinButtonLabel = App.Settings.Prop.RpcJoinButtonLabel;
+
+        public string RpcGamePageButtonLabel
+        {
+            get => App.Settings.Prop.RpcGamePageButtonLabel;
+            set { App.Settings.Prop.RpcGamePageButtonLabel = value; SetField(ref _rpcGamePageButtonLabel, value); }
+        }
+        private string _rpcGamePageButtonLabel = App.Settings.Prop.RpcGamePageButtonLabel;
+
+        public string RpcCustomLargeImageText
+        {
+            get => App.Settings.Prop.RpcCustomLargeImageText;
+            set { App.Settings.Prop.RpcCustomLargeImageText = value; SetField(ref _rpcCustomLargeImageText, value); }
+        }
+        private string _rpcCustomLargeImageText = App.Settings.Prop.RpcCustomLargeImageText;
+
+        public string RpcCustomSmallImageText
+        {
+            get => App.Settings.Prop.RpcCustomSmallImageText;
+            set { App.Settings.Prop.RpcCustomSmallImageText = value; SetField(ref _rpcCustomSmallImageText, value); }
+        }
+        private string _rpcCustomSmallImageText = App.Settings.Prop.RpcCustomSmallImageText;
         #endregion
 
         #region Helpers

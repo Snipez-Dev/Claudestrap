@@ -59,6 +59,19 @@
             </StackPanel>
         </ui:CardAction>
 
+        <ui:CardAction
+            Click="OpenAmdSettings_Click"
+            Icon="Flag24">
+            <StackPanel>
+                <TextBlock FontSize="14" Text="AMD Graphics Settings" />
+                <TextBlock
+                    Margin="0,2,0,0"
+                    Padding="0,0,16,0"
+                    FontSize="12"
+                    Text="Edit AMD Radeon driver settings via registry. AMD GPUs only." />
+            </StackPanel>
+        </ui:CardAction>
+
         <controls:OptionControl
             Height="73"
             Description="{x:Static resources:Strings.Menu_FastFlags_ManagerEnabled_Description}"
