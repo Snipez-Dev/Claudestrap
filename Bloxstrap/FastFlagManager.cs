@@ -44,6 +44,9 @@ namespace Claudestrap
             // Memory Probing
             { "Memory.Probe", "DFFlagPerformanceControlEnableMemoryProbing3" },
 
+            // RAM limit (user-controlled, in MB)
+            { "Memory.MaxRamMB", "DFIntMemCacheMaxCapacityMB" },
+
             //Optimize charcater frame
            { "OptimizeCFrameUpdates", "FFlagOptimizeCFrameUpdates4" },
            { "OptimizeCFrameUpdatesIC", "FFlagOptimizeCFrameUpdatesIC4" },

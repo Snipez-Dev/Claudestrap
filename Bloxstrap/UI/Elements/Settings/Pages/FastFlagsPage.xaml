@@ -610,6 +610,31 @@ Margin="8,0,8,0" />
                             <ui:ToggleSwitch IsChecked="{Binding CacheSizeImprovement, Mode=TwoWay}" />
                         </controls:OptionControl>
 
+                        <controls:OptionControl
+                            Header="RAM-Limit aktivieren"
+                            Description="Legt fest wie viel Arbeitsspeicher Roblox maximal nutzen darf.">
+                            <ui:ToggleSwitch IsChecked="{Binding RamLimitEnabled, Mode=TwoWay}" />
+                        </controls:OptionControl>
+
+                        <controls:OptionControl
+                            Header="RAM-Limit (GB)"
+                            Description="{Binding RamLimitLabel}">
+                            <StackPanel Width="220">
+                                <Slider
+                                    Minimum="1"
+                                    Maximum="32"
+                                    TickFrequency="1"
+                                    IsSnapToTickEnabled="True"
+                                    IsEnabled="{Binding RamLimitEnabled}"
+                                    Value="{Binding RamLimitMB, Mode=TwoWay}" />
+                                <TextBlock
+                                    Margin="0,4,0,0"
+                                    FontSize="12"
+                                    Foreground="Gray"
+                                    Text="{Binding RamLimitLabel}" />
+                            </StackPanel>
+                        </controls:OptionControl>
+
                     </StackPanel>
                 </ui:CardExpander>
 

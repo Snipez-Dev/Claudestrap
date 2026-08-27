@@ -235,6 +235,41 @@ namespace Claudestrap.UI.ViewModels.Settings
         }
 
 
+        public bool RamLimitEnabled
+        {
+            get => App.FastFlags.GetPreset("Memory.MaxRamMB") != null;
+            set
+            {
+                if (value)
+                    App.FastFlags.SetPreset("Memory.MaxRamMB", (RamLimitMB * 1024).ToString());
+                else
+                    App.FastFlags.SetPreset("Memory.MaxRamMB", null);
+                OnPropertyChanged(nameof(RamLimitEnabled));
+            }
+        }
+
+        private int _ramLimitMB = 4;
+        public int RamLimitMB
+        {
+            get
+            {
+                var raw = App.FastFlags.GetPreset("Memory.MaxRamMB");
+                if (raw != null && int.TryParse(raw, out int mb))
+                    _ramLimitMB = mb / 1024;
+                return _ramLimitMB;
+            }
+            set
+            {
+                _ramLimitMB = value;
+                if (RamLimitEnabled)
+                    App.FastFlags.SetPreset("Memory.MaxRamMB", (value * 1024).ToString());
+                OnPropertyChanged(nameof(RamLimitMB));
+                OnPropertyChanged(nameof(RamLimitLabel));
+            }
+        }
+
+        public string RamLimitLabel => $"{RamLimitMB} GB";
+
         public bool MoreSensetivityNumbers
         {
             get => App.FastFlags.GetPreset("UI.SensetivityNumbers") == "False";
