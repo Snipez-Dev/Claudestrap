@@ -59,6 +59,19 @@
             </StackPanel>
         </ui:CardAction>
 
+        <ui:CardAction
+            Click="OpenAmdSettings_Click"
+            Icon="Flag24">
+            <StackPanel>
+                <TextBlock FontSize="14" Text="AMD Graphics Settings" />
+                <TextBlock
+                    Margin="0,2,0,0"
+                    Padding="0,0,16,0"
+                    FontSize="12"
+                    Text="Edit AMD Radeon driver settings via registry. AMD GPUs only." />
+            </StackPanel>
+        </ui:CardAction>
+
         <controls:OptionControl
             Height="73"
             Description="{x:Static resources:Strings.Menu_FastFlags_ManagerEnabled_Description}"
@@ -466,6 +479,168 @@ Margin="8,0,8,0" />
                 <controls:OptionControl Description="Forces Roblox's own menus and UI to use its dark color theme instead of the default light theme." Header="Black Mode (Dark UI Theme)">
                     <ui:ToggleSwitch IsChecked="{Binding EnableDarkMode, Mode=TwoWay}" />
                 </controls:OptionControl>
+            </StackPanel>
+        </ui:CardExpander>
+
+        <!-- Performance Tweaks -->
+        <ui:CardExpander Margin="0,8,0,0" IsExpanded="False">
+            <ui:CardExpander.Header>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0">
+                        <TextBlock FontSize="14.4" Text="Performance Tweaks" />
+                        <TextBlock
+                            Margin="0,2,0,0"
+                            FontSize="12"
+                            Foreground="{StaticResource TextFillColorTertiaryBrush}"
+                            Text="Advanced flags to squeeze out more FPS and reduce load times" />
+                    </StackPanel>
+                </Grid>
+            </ui:CardExpander.Header>
+
+            <StackPanel>
+
+                <!-- Rendering -->
+                <ui:CardExpander Margin="0,4,0,0" IsExpanded="True">
+                    <ui:CardExpander.Header>
+                        <TextBlock FontSize="13" FontWeight="Medium" Text="Rendering" />
+                    </ui:CardExpander.Header>
+                    <StackPanel>
+
+                        <controls:OptionControl
+                            Header="GPU + CPU Light Culling"
+                            Description="Skips rendering objects outside the camera frustum. Good FPS gain in dense scenes.">
+                            <ui:ToggleSwitch IsChecked="{Binding LightCulling, Mode=TwoWay}" />
+                        </controls:OptionControl>
+
+                        <controls:OptionControl
+                            Header="Render Occlusion Culling"
+                            Description="Skips rendering objects hidden behind other objects. Can significantly reduce GPU load.">
+                            <ui:ToggleSwitch IsChecked="{Binding RenderOcclusion, Mode=TwoWay}" />
+                        </controls:OptionControl>
+
+                        <controls:OptionControl
+                            Header="Prerender Frames"
+                            Description="Renders a frame ahead to smooth out frame pacing. Reduces hitching.">
+                            <ui:ToggleSwitch IsChecked="{Binding Prerender, Mode=TwoWay}" />
+                        </controls:OptionControl>
+
+                        <controls:OptionControl
+                            Header="Task Scheduler Avoid Sleep"
+                            Description="Keeps the task scheduler awake instead of sleeping between frames. Reduces frame time variance.">
+                            <ui:ToggleSwitch IsChecked="{Binding TaskSchedulerAvoidingSleep, Mode=TwoWay}" />
+                        </controls:OptionControl>
+
+                        <controls:OptionControl
+                            Header="Disable Post-Effects"
+                            Description="Disables bloom, depth-of-field and other post-processing effects. Large FPS gain on low-end GPUs.">
+                            <ui:ToggleSwitch IsChecked="{Binding DisablePostFX, Mode=TwoWay}" />
+                        </controls:OptionControl>
+
+                        <controls:OptionControl
+                            Header="Disable Sky / FRM Bloom"
+                            Description="Disables sky rendering and FRM bloom pass. Reduces GPU workload.">
+                            <ui:ToggleSwitch IsChecked="{Binding DisableSky, Mode=TwoWay}" />
+                        </controls:OptionControl>
+
+                        <controls:OptionControl
+                            Header="Disable Ambient Occlusion"
+                            Description="Removes ambient occlusion lighting computation. Improves FPS especially on older GPUs.">
+                            <ui:ToggleSwitch IsChecked="{Binding DisableAmbientOcclusion, Mode=TwoWay}" />
+                        </controls:OptionControl>
+
+                        <controls:OptionControl
+                            Header="Disable Terrain Textures"
+                            Description="Replaces terrain with solid colours. Saves GPU memory bandwidth.">
+                            <ui:ToggleSwitch IsChecked="{Binding DisableTerrainTextures, Mode=TwoWay}" />
+                        </controls:OptionControl>
+
+                        <controls:OptionControl
+                            Header="Reduce Particles"
+                            Description="Lowers particle system quality. Can help FPS in particle-heavy games.">
+                            <ui:ToggleSwitch IsChecked="{Binding WorserParticles, Mode=TwoWay}" />
+                        </controls:OptionControl>
+
+                        <controls:OptionControl
+                            Header="Low Poly Meshes"
+                            Description="Forces lowest LOD on all meshes regardless of distance. Biggest FPS gain, biggest visual loss.">
+                            <ui:ToggleSwitch IsChecked="{Binding LowPolyMeshes, Mode=TwoWay}" />
+                        </controls:OptionControl>
+
+                        <controls:OptionControl
+                            Header="Minimal Rendering Mode"
+                            Description="Enables a stripped-down rendering path. Experimental — may cause visual artifacts.">
+                            <ui:ToggleSwitch IsChecked="{Binding MinimalRendering, Mode=TwoWay}" />
+                        </controls:OptionControl>
+
+                        <controls:OptionControl
+                            Header="Physics Skip Rendered Step"
+                            Description="Skips physics calculations on rendered frames. Reduces CPU load at the cost of slightly less smooth physics.">
+                            <ui:ToggleSwitch IsChecked="{Binding PhysicsSkipStep, Mode=TwoWay}" />
+                        </controls:OptionControl>
+
+                    </StackPanel>
+                </ui:CardExpander>
+
+                <!-- Loading & Memory -->
+                <ui:CardExpander Margin="0,4,0,0" IsExpanded="True">
+                    <ui:CardExpander.Header>
+                        <TextBlock FontSize="13" FontWeight="Medium" Text="Loading &amp; Memory" />
+                    </ui:CardExpander.Header>
+                    <StackPanel>
+
+                        <controls:OptionControl
+                            Header="Faster Asset Loading"
+                            Description="Raises the asset preload limit to max and enables mesh preloading. Reduces in-game pop-in.">
+                            <ui:ToggleSwitch IsChecked="{Binding FasterLoading, Mode=TwoWay}" />
+                        </controls:OptionControl>
+
+                        <controls:OptionControl
+                            Header="Preload All Assets on Join"
+                            Description="Aggressively preloads sounds, textures and fonts before the game starts. Longer load screen, smoother in-game.">
+                            <ui:ToggleSwitch IsChecked="{Binding Preload, Mode=TwoWay}" />
+                        </controls:OptionControl>
+
+                        <controls:OptionControl
+                            Header="Increase Cache Sizes"
+                            Description="Maximises HTTP, memory and file cache limits. Reduces repeated network fetches for the same assets.">
+                            <ui:ToggleSwitch IsChecked="{Binding CacheSizeImprovement, Mode=TwoWay}" />
+                        </controls:OptionControl>
+
+                    </StackPanel>
+                </ui:CardExpander>
+
+                <!-- Network -->
+                <ui:CardExpander Margin="0,4,0,4" IsExpanded="True">
+                    <ui:CardExpander.Header>
+                        <TextBlock FontSize="13" FontWeight="Medium" Text="Network" />
+                    </ui:CardExpander.Header>
+                    <StackPanel>
+
+                        <controls:OptionControl
+                            Header="Less Lag Spikes"
+                            Description="Raises network bandwidth and reduces max work-catchup time. Fewer rubber-band moments.">
+                            <ui:ToggleSwitch IsChecked="{Binding LessLagSpikes, Mode=TwoWay}" />
+                        </controls:OptionControl>
+
+                        <controls:OptionControl
+                            Header="Better Packet Sending"
+                            Description="Optimises packet queue, buffer sizes and send intervals. Reduces ping variance.">
+                            <ui:ToggleSwitch IsChecked="{Binding BetterPacketSending, Mode=TwoWay}" />
+                        </controls:OptionControl>
+
+                        <controls:OptionControl
+                            Header="Disable Telemetry"
+                            Description="Blocks all Roblox analytics and telemetry endpoints. Small network and CPU saving.">
+                            <ui:ToggleSwitch IsChecked="{Binding DisableTelemetry, Mode=TwoWay}" />
+                        </controls:OptionControl>
+
+                    </StackPanel>
+                </ui:CardExpander>
+
             </StackPanel>
         </ui:CardExpander>
 

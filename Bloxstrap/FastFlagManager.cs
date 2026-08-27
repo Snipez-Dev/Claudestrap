@@ -448,6 +448,12 @@ namespace Claudestrap
 
             { "Rendering.Nograss1", "FIntFRMMinGrassDistance" },
             { "Rendering.Nograss2", "FIntFRMMaxGrassDistance" },
+
+            // Physics performance
+            { "Physics.SkipRenderedStep", "DFFlagPhysicsSkipRenderedStep" },
+
+            // Ambient Occlusion
+            { "Rendering.NoAmbientOcclusion", "FFlagRenderNoLowFreqLight" },
         };
 
         public static IReadOnlyDictionary<RenderingMode, string> RenderingModes => new Dictionary<RenderingMode, string>

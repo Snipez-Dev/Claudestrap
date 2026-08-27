@@ -15,7 +15,10 @@ namespace Claudestrap.Integrations
 {
     public class DiscordRichPresence : IDisposable
     {
-        private readonly DiscordRpcClient _rpcClient = new("1005469189907173486");
+        private readonly DiscordRpcClient _rpcClient = new(
+            string.IsNullOrWhiteSpace(App.Settings.Prop.DiscordRpcAppId)
+                ? "1527407497311158522"
+                : App.Settings.Prop.DiscordRpcAppId);
         private readonly ActivityWatcher _activityWatcher;
         private readonly ConcurrentQueue<Message> _messageQueue = new();
         private readonly SemaphoreSlim _updateLock = new(1, 1);
@@ -305,9 +308,17 @@ namespace Claudestrap.Integrations
                 ? App.Settings.Prop.UseCustomIcon
                 : (App.Settings.Prop.GameIconChecked ? universe.Thumbnail.ImageUrl : "");
 
-            string largeImageText = !string.IsNullOrWhiteSpace(App.Settings.Prop.UseCustomIcon)
-                ? ""
-                : (App.Settings.Prop.GameIconChecked && App.Settings.Prop.GameNameChecked ? universe.Data.Name : "");
+            // Large Image Text: Eigener Text hat Vorrang, sonst Spielname
+            string largeImageText = !string.IsNullOrWhiteSpace(App.Settings.Prop.RpcCustomLargeImageText)
+                ? App.Settings.Prop.RpcCustomLargeImageText
+                : (!string.IsNullOrWhiteSpace(App.Settings.Prop.UseCustomIcon)
+                    ? ""
+                    : (App.Settings.Prop.GameIconChecked && App.Settings.Prop.GameNameChecked ? universe.Data.Name : ""));
+
+            // Timestamps nur wenn aktiviert
+            Timestamps? timestamps = App.Settings.Prop.RpcShowTimestamp
+                ? new Timestamps { Start = timeStarted.ToUniversalTime() }
+                : null;
 
             if (_currentPresence != null)
             {
@@ -318,7 +329,7 @@ namespace Claudestrap.Integrations
                 _currentPresence.Assets.SmallImageKey = smallImage;
                 _currentPresence.Assets.SmallImageText = smallText;
                 _currentPresence.Buttons = GetButtons();
-                _currentPresence.Timestamps.Start = timeStarted.ToUniversalTime();
+                _currentPresence.Timestamps = timestamps;
             }
             else
             {
@@ -326,7 +337,7 @@ namespace Claudestrap.Integrations
                 {
                     Details = details,
                     State = state,
-                    Timestamps = new Timestamps { Start = timeStarted.ToUniversalTime() },
+                    Timestamps = timestamps,
                     Buttons = GetButtons(),
                     Assets = new Assets
                     {
@@ -380,17 +391,27 @@ namespace Claudestrap.Integrations
 
         private async Task<(string key, string text)> GetSmallImageAsync(ActivityData activity)
         {
+            // Eigener Small-Image-Text aus den Einstellungen
+            string customText = App.Settings.Prop.RpcCustomSmallImageText;
+
             if (!App.Settings.Prop.ShowAccountOnRichPresence)
-                return ("Claudestrap", "Claudestrap");
+            {
+                string text = string.IsNullOrWhiteSpace(customText) ? "Claudestrap" : customText;
+                return ("claudestrap", text);
+            }
 
             try
             {
                 var user = await UserDetails.Fetch(activity.UserId);
-                return (user.Thumbnail.ImageUrl, $"{user.Data.DisplayName} (@{user.Data.Name})");
+                string displayText = string.IsNullOrWhiteSpace(customText)
+                    ? $"{user.Data.DisplayName} (@{user.Data.Name})"
+                    : customText;
+                return (user.Thumbnail.ImageUrl, displayText);
             }
             catch
             {
-                return ("Claudestrap", "Claudestrap");
+                string text = string.IsNullOrWhiteSpace(customText) ? "Claudestrap" : customText;
+                return ("claudestrap", text);
             }
         }
 
@@ -399,7 +420,8 @@ namespace Claudestrap.Integrations
             var data = _activityWatcher.Data;
             var buttons = new List<Button>();
 
-            if (!App.Settings.Prop.HideRPCButtons)
+            // Join-Server-Button
+            if (!App.Settings.Prop.HideRPCButtons && App.Settings.Prop.RpcShowJoinButton)
             {
                 string? inviteUrl = null;
                 if (data.ServerType == ServerType.Public ||
@@ -409,10 +431,23 @@ namespace Claudestrap.Integrations
                 }
 
                 if (!string.IsNullOrEmpty(inviteUrl))
-                    buttons.Add(new Button { Label = "Join server", Url = inviteUrl });
+                {
+                    string joinLabel = string.IsNullOrWhiteSpace(App.Settings.Prop.RpcJoinButtonLabel)
+                        ? "Join server"
+                        : App.Settings.Prop.RpcJoinButtonLabel;
+                    buttons.Add(new Button { Label = joinLabel, Url = inviteUrl });
+                }
             }
 
-            buttons.Add(new Button { Label = "Game Page", Url = $"https://www.roblox.com/games/{data.PlaceId}" });
+            // Game-Page-Button
+            if (App.Settings.Prop.RpcShowGamePageButton)
+            {
+                string gamePageLabel = string.IsNullOrWhiteSpace(App.Settings.Prop.RpcGamePageButtonLabel)
+                    ? "Game Page"
+                    : App.Settings.Prop.RpcGamePageButtonLabel;
+                buttons.Add(new Button { Label = gamePageLabel, Url = $"https://www.roblox.com/games/{data.PlaceId}" });
+            }
+
             return buttons.ToArray();
         }
 

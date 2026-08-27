@@ -77,7 +77,7 @@
                         Text="Claudestrap" />
 
                 </Grid>
-                <TextBlock Text="by Snypez × Nudel RP" />
+                <TextBlock Text="by Snypez × nothing_5951" />
             </StackPanel>
         </Grid>
 
@@ -126,7 +126,7 @@
                     <TextBlock
                         FontSize="16"
                         FontWeight="SemiBold"
-                        Text="Nudel RP" />
+                        Text="nothing_5951" />
                 </StackPanel>
             </ui:Card>
 
