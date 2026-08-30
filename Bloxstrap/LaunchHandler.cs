@@ -220,7 +220,7 @@ namespace Claudestrap
 #if (!DEBUG || DEBUG_UPDATER) && !QA_BUILD
             if (App.Settings.Prop.CheckForUpdates && !App.LaunchSettings.UpgradeFlag.Active)
             {
-                bool updateApplied = await GithubUpdater.CheckForUpdateAsync(quiet: false);
+                bool updateApplied = await GithubUpdater.CheckForUpdateAsync(quiet: false) == UpdateCheckResult.Applied;
                 if (updateApplied)
                     return;
             }

@@ -189,58 +189,26 @@ namespace Claudestrap.UI.Elements.Settings.Pages
 
         private async void Check_Click(object sender, RoutedEventArgs e)
         {
-            try
-            {
-                string? latestTag = await GithubUpdater.GetLatestVersionTagAsync();
+            // Goes through the same updater as the automatic check on launch. This used to
+            // be a second copy of the whole flow -- its own version comparison, its own
+            // prompt, and a download with no progress window -- so pressing Yes here left
+            // the app looking frozen while the automatic path showed progress.
+            var result = await GithubUpdater.CheckForUpdateAsync(quiet: false, force: true);
 
-                if (string.IsNullOrWhiteSpace(latestTag))
-                {
+            switch (result)
+            {
+                case UpdateCheckResult.UpToDate:
+                    Frontend.ShowMessageBox("You are already running the latest version of Claudestrap.");
+                    break;
+
+                case UpdateCheckResult.Unreachable:
                     Frontend.ShowMessageBox("Could not reach GitHub to check for updates.");
-                    return;
-                }
+                    break;
 
-                string currentVersion = App.Version;
-
-                if (IsNewerVersion(latestTag, currentVersion))
-                {
-                    var result = Frontend.ShowMessageBox(
-                        $"A new version of Claudestrap is available ({latestTag}), and you're currently on {currentVersion}.\n\n" +
-                        "Would you like to upgrade now, or stay on your current version?",
-                        MessageBoxImage.Information,
-                        MessageBoxButton.YesNo,
-                        MessageBoxResult.Yes);
-
-                    if (result != MessageBoxResult.Yes)
-                        return;
-
-                    bool applied = await GithubUpdater.DownloadAndInstallUpdate(latestTag);
-
-                    if (!applied)
-                        Frontend.ShowMessageBox("Failed to download or apply the update. Try again later.");
-                }
-                else
-                {
-                    Frontend.ShowMessageBox(
-                        "You are already running the latest version of Claudestrap."
-                    );
-                }
+                // Applied restarts the app, and Declined/Failed have already been answered
+                // by the updater itself -- saying anything else here would just stack a
+                // second message box on top.
             }
-            catch (Exception ex)
-            {
-                Frontend.ShowMessageBox(
-                    $"Error checking for updates:\n{ex.Message}"
-                );
-            }
-        }
-
-        private bool IsNewerVersion(string latest, string current)
-        {
-            if (Version.TryParse(latest.TrimStart('v'), out var latestV) &&
-                Version.TryParse(current, out var currentV))
-            {
-                return latestV > currentV;
-            }
-            return false;
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)

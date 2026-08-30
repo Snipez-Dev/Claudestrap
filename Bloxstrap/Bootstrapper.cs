@@ -234,7 +234,7 @@ namespace Claudestrap
                 // No-op if the launch menu already checked earlier in this session --
                 // see GithubUpdater.CheckForUpdateAsync. Only actually prompts here for
                 // launches that skip the menu entirely (e.g. a roblox-player: protocol join).
-                bool updateApplied = await GithubUpdater.CheckForUpdateAsync(App.LaunchSettings.QuietFlag.Active);
+                bool updateApplied = await GithubUpdater.CheckForUpdateAsync(App.LaunchSettings.QuietFlag.Active) == UpdateCheckResult.Applied;
                 if (updateApplied)
                 {
                     Dialog?.CloseBootstrapper();

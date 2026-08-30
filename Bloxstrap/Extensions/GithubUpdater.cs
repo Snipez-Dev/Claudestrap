@@ -8,6 +8,22 @@ using Claudestrap;
 using Claudestrap.UI;
 using Claudestrap.UI.Elements.Dialogs;
 
+/// <summary>What an update check ended up doing, so callers can report it without
+/// re-implementing the check themselves.</summary>
+public enum UpdateCheckResult
+{
+    /// <summary>Already checked this session and not forced.</summary>
+    AlreadyChecked,
+    /// <summary>version.txt couldn't be read.</summary>
+    Unreachable,
+    UpToDate,
+    /// <summary>The user chose to stay on the current version.</summary>
+    Declined,
+    /// <summary>Downloaded and installed; the process is about to restart.</summary>
+    Applied,
+    Failed
+}
+
 public static class GithubUpdater
 {
     private static readonly HttpClient http = new()
@@ -26,10 +42,14 @@ public static class GithubUpdater
     /// Returns true if an update was applied -- the caller should stop what it was
     /// doing, since the process is about to exit and restart into the new build.
     /// </summary>
-    public static async Task<bool> CheckForUpdateAsync(bool quiet)
+    /// <param name="quiet">Apply without asking and without any window -- silent launches.</param>
+    /// <param name="force">Run even if this session already checked. The automatic check
+    /// happens once per session; the button in settings is an explicit request, so it
+    /// bypasses that instead of silently doing nothing.</param>
+    public static async Task<UpdateCheckResult> CheckForUpdateAsync(bool quiet, bool force = false)
     {
-        if (_checkedThisSession)
-            return false;
+        if (_checkedThisSession && !force)
+            return UpdateCheckResult.AlreadyChecked;
 
         _checkedThisSession = true;
 
@@ -38,7 +58,7 @@ public static class GithubUpdater
             string? latestTag = await GetLatestVersionTagAsync();
 
             if (string.IsNullOrWhiteSpace(latestTag))
-                return false;
+                return UpdateCheckResult.Unreachable;
 
             string currentVersion = Assembly.GetExecutingAssembly().GetName().Version!.ToString();
             string remote = latestTag.TrimStart('v', 'V');
@@ -50,7 +70,7 @@ public static class GithubUpdater
             if (!isNewer)
             {
                 App.Logger.WriteLine("GitHubUpdater", "No newer release found.");
-                return false;
+                return UpdateCheckResult.UpToDate;
             }
 
             App.Logger.WriteLine("GitHubUpdater", $"Newer release found: {latestTag}");
@@ -72,7 +92,7 @@ public static class GithubUpdater
             if (!proceed)
             {
                 App.Logger.WriteLine("GitHubUpdater", "Update declined.");
-                return false;
+                return UpdateCheckResult.Declined;
             }
 
             // Quiet launches stay silent; every other path gets a window, because the
@@ -103,12 +123,12 @@ public static class GithubUpdater
                     MessageBoxImage.Warning);
             }
 
-            return applied;
+            return applied ? UpdateCheckResult.Applied : UpdateCheckResult.Failed;
         }
         catch (Exception ex)
         {
             App.Logger.WriteLine("GitHubUpdater", $"Update check failed: {ex.Message}");
-            return false;
+            return UpdateCheckResult.Failed;
         }
     }
 
