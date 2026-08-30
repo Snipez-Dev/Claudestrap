@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using Claudestrap;
 using Claudestrap.UI;
+using Claudestrap.UI.Elements.Dialogs;
 
 public static class GithubUpdater
 {
@@ -74,7 +75,25 @@ public static class GithubUpdater
                 return false;
             }
 
-            bool applied = await DownloadAndInstallUpdate(latestTag);
+            // Quiet launches stay silent; every other path gets a window, because the
+            // download is a couple of hundred megabytes and an app that appears to hang
+            // for a minute is indistinguishable from one that crashed.
+            UpdateProgressDialog? progress = quiet ? null : ShowProgressDialog(latestTag);
+
+            bool applied;
+
+            try
+            {
+                applied = await DownloadAndInstallUpdate(latestTag, progress);
+            }
+            finally
+            {
+                // On success the process exits inside UpdateExe and never gets here; this
+                // is the failure path, where the window has to come down before the error
+                // message box goes up.
+                progress?.CloseDialog();
+            }
+
             App.Logger.WriteLine("GitHubUpdater", applied ? "Update applied, restarting." : "Update failed.");
 
             if (!applied)
@@ -117,12 +136,36 @@ public static class GithubUpdater
         }
     }
 
-    public static async Task<bool> DownloadAndInstallUpdate(string tag)
+    private static UpdateProgressDialog? ShowProgressDialog(string tag)
+    {
+        var app = Application.Current;
+
+        if (app is null)
+            return null;
+
+        try
+        {
+            return app.Dispatcher.Invoke(() =>
+            {
+                var dialog = new UpdateProgressDialog(tag);
+                dialog.Show();
+                return dialog;
+            });
+        }
+        catch (Exception ex)
+        {
+            // A missing progress window is no reason to skip the update itself.
+            App.Logger.WriteLine("GitHubUpdater", $"Couldn't open the progress window: {ex.Message}");
+            return null;
+        }
+    }
+
+    public static async Task<bool> DownloadAndInstallUpdate(string tag, UpdateProgressDialog? progress = null)
     {
         try
         {
             App.Logger.WriteLine("GitHubUpdater", $"Downloading update {tag}...");
-            return await UpdateExe(LatestExeDownloadUrl, "Claudestrap.exe");
+            return await UpdateExe(LatestExeDownloadUrl, "Claudestrap.exe", progress);
         }
         catch (Exception ex)
         {
@@ -131,21 +174,24 @@ public static class GithubUpdater
         }
     }
 
-    private static async Task<bool> UpdateExe(string url, string name)
+    private static async Task<bool> UpdateExe(string url, string name, UpdateProgressDialog? progress)
     {
         string tempDir = Path.Combine(Path.GetTempPath(), "Claudestrap_Update");
         Directory.CreateDirectory(tempDir);
 
         string exePath = Path.Combine(tempDir, name);
-        var bytes = await http.GetByteArrayAsync(url);
 
-        if (bytes.Length == 0)
+        progress?.SetStatus("Connecting to GitHub...", indeterminate: true);
+
+        long received = await DownloadWithProgressAsync(url, exePath, progress);
+
+        if (received == 0)
         {
             App.Logger.WriteLine("GitHubUpdater", "Downloaded update was empty, aborting.");
             return false;
         }
 
-        await File.WriteAllBytesAsync(exePath, bytes);
+        progress?.SetStatus("Installing update...", indeterminate: true);
 
         string currentExe = Environment.ProcessPath!;
         string backupExe = currentExe + ".old";
@@ -155,6 +201,8 @@ public static class GithubUpdater
         try
         {
             File.Copy(exePath, currentExe, true);
+
+            progress?.SetStatus("Restarting Claudestrap...", indeterminate: true);
 
             Process.Start(new ProcessStartInfo
             {
@@ -187,5 +235,46 @@ public static class GithubUpdater
         // (backupExe) is no longer needed, so exit immediately rather than racing it.
         Environment.Exit(0);
         return true;
+    }
+
+    /// <summary>
+    /// Streams the download to disk instead of buffering the whole file in memory,
+    /// reporting progress as it goes. Returns the number of bytes written.
+    /// </summary>
+    private static async Task<long> DownloadWithProgressAsync(string url, string destination, UpdateProgressDialog? progress)
+    {
+        using var response = await http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead);
+        response.EnsureSuccessStatusCode();
+
+        long? total = response.Content.Headers.ContentLength;
+
+        progress?.SetStatus("Downloading update...");
+        progress?.SetProgress(0, total);
+
+        using var source = await response.Content.ReadAsStreamAsync();
+        using var target = new FileStream(destination, FileMode.Create, FileAccess.Write, FileShare.None);
+
+        byte[] buffer = new byte[81920];
+        long received = 0;
+        var lastReport = DateTime.UtcNow;
+        int read;
+
+        while ((read = await source.ReadAsync(buffer)) > 0)
+        {
+            await target.WriteAsync(buffer.AsMemory(0, read));
+            received += read;
+
+            // ~2,600 chunks for a 200 MB download -- reporting every one of them would
+            // spend more time on the dispatcher than on the transfer.
+            if (progress is not null && (DateTime.UtcNow - lastReport).TotalMilliseconds >= 100)
+            {
+                progress.SetProgress(received, total);
+                lastReport = DateTime.UtcNow;
+            }
+        }
+
+        progress?.SetProgress(received, total);
+
+        return received;
     }
 }
