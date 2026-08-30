@@ -1,9 +1,11 @@
-name: Release
+name: Tag build check
 
-# version.txt is maintained by hand in the same commit that bumps the csproj, so
-# this workflow only builds and publishes -- it deliberately doesn't commit back
-# to main. A bot pushing that bump put github-actions[bot] in the repo's
-# contributor list for a one-line file we already keep in sync ourselves.
+# Verifies that a tagged commit actually builds. It deliberately doesn't publish
+# anything and doesn't commit back to main: everything that lands in this repo is
+# authored by the maintainer, and anything a workflow pushes is attributed to
+# github-actions[bot] instead. Releases are cut from a maintainer's machine with
+# `gh release create v<x> publish/Claudestrap.exe`, and version.txt is bumped by
+# hand in the same commit as the csproj version.
 
 on:
   push:
@@ -11,10 +13,10 @@ on:
       - "v*"
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  build-and-release:
+  build:
     runs-on: windows-latest
 
     steps:
@@ -48,10 +50,3 @@ jobs:
           -p:Version=${{ steps.version.outputs.version }}
           -p:FileVersion=${{ steps.version.outputs.version }}
           -o publish
-
-      - name: Create release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ steps.version.outputs.tag }}
-          name: ${{ steps.version.outputs.tag }}
-          files: publish/Claudestrap.exe
