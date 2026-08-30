@@ -35,6 +35,8 @@ namespace Claudestrap.UI.Elements.Dialogs
 
             DataContext = viewModel;
 
+            Closed += (_, _) => viewModel.CancelBackgroundWork();
+
             InitializeComponent();
         }
 

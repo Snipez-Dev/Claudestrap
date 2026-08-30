@@ -118,9 +118,43 @@ namespace Claudestrap
         {
             e.Handled = true;
 
+            if (IsWpfInputRace(e.Exception))
+            {
+                // Nothing of ours is involved and nothing is broken afterwards -- killing
+                // the app over it just loses the user's session for a hiccup in WPF.
+                Logger.WriteLine("App::GlobalExceptionHandler", "Ignoring WPF input-race NullReferenceException");
+                return;
+            }
+
             Logger.WriteLine("App::GlobalExceptionHandler", "An exception occurred");
 
             FinalizeExceptionHandling(e.Exception);
+        }
+
+        /// <summary>
+        /// A NullReferenceException thrown entirely inside WPF's own input plumbing, with
+        /// no frame of ours on the stack. WPF hits this when it re-synchronises the mouse
+        /// against a window whose presentation source has gone -- a window closing while
+        /// something else invalidates hit-testing, for instance. There is nothing to fix
+        /// on our side of that stack and nothing is left in a bad state, so it must not
+        /// take the whole app down with a crash dialog.
+        /// </summary>
+        private static bool IsWpfInputRace(Exception ex)
+        {
+            if (ex is not NullReferenceException)
+                return false;
+
+            string? stack = ex.StackTrace;
+
+            if (string.IsNullOrEmpty(stack))
+                return false;
+
+            // Ours anywhere on the stack means it is our bug, whatever it looks like.
+            if (stack.Contains("Claudestrap", StringComparison.Ordinal))
+                return false;
+
+            return stack.Contains("System.Windows.Input.KeyboardDevice", StringComparison.Ordinal)
+                || stack.Contains("System.Windows.Input.MouseDevice", StringComparison.Ordinal);
         }
 
         public static void FinalizeExceptionHandling(AggregateException ex)

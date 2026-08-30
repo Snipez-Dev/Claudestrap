@@ -203,6 +203,15 @@ namespace Claudestrap.UI.ViewModels.Installer
             _ = RefreshLoginStatusAsync();
         }
 
+        /// <summary>Stops the background login check. The window calls this when it
+        /// closes: each answer flips a dropdown item, and a flip after the window is gone
+        /// invalidates hit-testing on a window that no longer has a presentation source,
+        /// which WPF answers with a NullReferenceException from inside its own input
+        /// plumbing -- a crash with no frame of ours anywhere in it.</summary>
+        public void CancelBackgroundWork() => _backgroundWork.Cancel();
+
+        private readonly CancellationTokenSource _backgroundWork = new();
+
         /// <summary>Checks each saved account's cookie against Roblox in the background
         /// and flips <see cref="AccountDropdownItem.IsLoggedOut"/> so the dropdown can
         /// surface a relogin icon for accounts whose session has expired.</summary>
@@ -210,6 +219,9 @@ namespace Claudestrap.UI.ViewModels.Installer
         {
             foreach (var item in AccountOptions.Where(o => o.Model is not null).ToList())
             {
+                if (_backgroundWork.IsCancellationRequested)
+                    return;
+
                 string? cookie = AccountCookieProtector.Unprotect(item.Model!.EncryptedCookie);
 
                 if (string.IsNullOrEmpty(cookie))
@@ -219,6 +231,12 @@ namespace Claudestrap.UI.ViewModels.Installer
                 }
 
                 var info = await RobloxAuthApi.FetchUserInfoAsync(cookie).ConfigureAwait(true);
+
+                // The answer can land long after the user has picked an account and the
+                // window has closed -- one network round trip per saved account.
+                if (_backgroundWork.IsCancellationRequested)
+                    return;
+
                 item.IsLoggedOut = !info.Ok;
             }
         }
