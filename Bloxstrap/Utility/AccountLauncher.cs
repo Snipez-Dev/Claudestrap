@@ -61,6 +61,11 @@ namespace Claudestrap.Utility
             if (!uriResult.Ok || string.IsNullOrEmpty(uriResult.Uri))
                 return new LaunchResult(false, uriResult.Error);
 
+            // Always first: Roblox's tray resident holds the previous account's session
+            // and the client singleton even though no window is open, so it would take
+            // over this launch and come back up as its own account.
+            CloseBackgroundPlayers();
+
             if (multiInstance)
             {
                 App.Logger.WriteLine(LOG_IDENT, "Multi-instance launching enabled, preparing singleton bypass");
@@ -98,16 +103,37 @@ namespace Claudestrap.Utility
             return new LaunchResult(true, null);
         }
 
-        private static void CloseRunningPlayer()
-        {
-            const string LOG_IDENT = "AccountLauncher::CloseRunningPlayer";
+        /// <summary>
+        /// Closes every live Roblox client. Needed before any account switch that isn't
+        /// multi-instance: Roblox's singleton check makes a second launch hand its args
+        /// to the client that's already running and exit, so the fresh auth ticket never
+        /// gets redeemed and the old account stays signed in.
+        /// </summary>
+        public static void CloseRunningPlayer()
+            => CloseAll(RobloxProcessDetector.GetLivePlayerProcesses(), "AccountLauncher::CloseRunningPlayer");
 
-            foreach (var process in RobloxProcessDetector.GetLivePlayerProcesses())
+        /// <summary>
+        /// Closes Roblox's tray-mode resident and any windowless leftovers. Closing the
+        /// Roblox window doesn't end the process -- it drops to the systray still holding
+        /// the account it was signed in as, and it's the process that Windows hands the
+        /// next roblox-player launch to. It then restores its own session instead of
+        /// redeeming our auth ticket, which is why a picked account could still come up
+        /// as whichever one was open last. Safe alongside multi-instance: these have no
+        /// window, so they aren't clients the user is playing on.
+        /// </summary>
+        public static void CloseBackgroundPlayers()
+            => CloseAll(RobloxProcessDetector.GetBackgroundPlayerProcesses(), "AccountLauncher::CloseBackgroundPlayers");
+
+        private static void CloseAll(List<Process> processes, string logIdent)
+        {
+            foreach (var process in processes)
             {
                 try
                 {
                     if (process.HasExited)
                         continue;
+
+                    App.Logger.WriteLine(logIdent, $"Closing Roblox pid {process.Id}");
 
                     process.CloseMainWindow();
                     if (!process.WaitForExit(3000))
@@ -115,7 +141,7 @@ namespace Claudestrap.Utility
                 }
                 catch (Exception ex)
                 {
-                    App.Logger.WriteLine(LOG_IDENT, $"Failed to close pid {process.Id}: {ex.Message}");
+                    App.Logger.WriteLine(logIdent, $"Failed to close pid {process.Id}: {ex.Message}");
                 }
                 finally
                 {

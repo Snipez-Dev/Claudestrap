@@ -13,6 +13,25 @@ namespace Claudestrap.Utility
     /// </summary>
     public static class RobloxAuthApi
     {
+        /// <summary>
+        /// Account requests get their own cookie-less client instead of App.HttpClient.
+        /// Roblox hands back a rotated .ROBLOSECURITY on the auth endpoints, and the
+        /// shared handler has cookie handling on by default -- its container would then
+        /// append that stored cookie alongside the per-account one we set here, and
+        /// Roblox authenticates whichever it picks. That made every saved account fetch
+        /// a ticket for whichever account happened to be in the container first, so the
+        /// wrong account launched.
+        /// </summary>
+        private static readonly HttpClient Client = new(
+            new HttpClientHandler
+            {
+                AutomaticDecompression = DecompressionMethods.All,
+                UseCookies = false
+            })
+        {
+            Timeout = TimeSpan.FromSeconds(30)
+        };
+
         private const string UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36";
 
         public sealed record UserInfoResult(bool Ok, string? Username, string? UserId, string? Reason);
@@ -26,7 +45,7 @@ namespace Claudestrap.Utility
                 req.Headers.Add("Accept", "application/json");
                 req.Headers.Add("User-Agent", UA);
 
-                using var res = await App.HttpClient.SendAsync(req).ConfigureAwait(false);
+                using var res = await Client.SendAsync(req).ConfigureAwait(false);
                 string body = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
 
                 using var doc = JsonDocument.Parse(body);
@@ -56,7 +75,7 @@ namespace Claudestrap.Utility
                 req.Content = new StringContent("");
                 req.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
 
-                using var res = await App.HttpClient.SendAsync(req).ConfigureAwait(false);
+                using var res = await Client.SendAsync(req).ConfigureAwait(false);
                 return res.Headers.TryGetValues("x-csrf-token", out var values) ? values.FirstOrDefault() : null;
             }
             catch
@@ -106,7 +125,7 @@ namespace Claudestrap.Utility
                     req.Content = new StringContent("");
                     req.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
 
-                    res = await App.HttpClient.SendAsync(req).ConfigureAwait(false);
+                    res = await Client.SendAsync(req).ConfigureAwait(false);
                 }
                 catch (Exception ex)
                 {

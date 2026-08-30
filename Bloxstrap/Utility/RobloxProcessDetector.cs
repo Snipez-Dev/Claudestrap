@@ -30,6 +30,12 @@ namespace Claudestrap.Utility
         /// </summary>
         private static readonly TimeSpan StartupGracePeriod = TimeSpan.FromSeconds(60);
 
+        /// <summary>
+        /// How long a windowless process is left alone before it counts as a
+        /// background resident rather than a client that's still starting up.
+        /// </summary>
+        private static readonly TimeSpan BackgroundGracePeriod = TimeSpan.FromSeconds(15);
+
         public static bool IsPlayerRunning() => HasLiveProcess(PlayerProcessNames);
 
         public static bool IsStudioRunning() => HasLiveProcess(StudioProcessNames);
@@ -43,6 +49,86 @@ namespace Claudestrap.Utility
         /// <summary>Live Roblox player processes only (excludes Studio), ghosts excluded.</summary>
         public static List<Process> GetLivePlayerProcesses()
             => GetLiveProcesses(PlayerProcessNames);
+
+        /// <summary>
+        /// Player processes with no window of their own: Roblox's tray-mode resident
+        /// (the app closed to the systray, still holding the last account's session and
+        /// the client singleton) plus leftovers from crashed launches. The live-client
+        /// checks deliberately ignore these because the user can't see them -- but an
+        /// account switch has to clear them out, or the tray resident absorbs the launch
+        /// and comes back up as its own account instead of the one that was picked.
+        /// </summary>
+        public static List<Process> GetBackgroundPlayerProcesses()
+        {
+            const string LOG_IDENT = "RobloxProcessDetector::GetBackgroundPlayerProcesses";
+
+            var background = new List<Process>();
+            int? sessionId = GetCurrentSessionId();
+
+            foreach (string name in PlayerProcessNames)
+            {
+                Process[] processes;
+
+                try
+                {
+                    processes = Process.GetProcessesByName(name);
+                }
+                catch (Exception ex)
+                {
+                    App.Logger.WriteLine(LOG_IDENT, $"Failed to enumerate {name}: {ex.Message}");
+                    continue;
+                }
+
+                foreach (var process in processes)
+                {
+                    bool resident;
+
+                    try
+                    {
+                        resident = IsBackgroundClient(process, sessionId);
+                    }
+                    catch (Exception ex)
+                    {
+                        // Can't inspect it -- leave it alone rather than kill something
+                        // the user is actually looking at.
+                        App.Logger.WriteLine(LOG_IDENT, $"Skipping {name} pid {SafeGetId(process)}: {ex.Message}");
+                        resident = false;
+                    }
+
+                    if (resident)
+                        background.Add(process);
+                    else
+                        process.Dispose();
+                }
+            }
+
+            return background;
+        }
+
+        private static bool IsBackgroundClient(Process process, int? sessionId)
+        {
+            if (process.HasExited)
+                return false;
+
+            if (sessionId is not null && process.SessionId != sessionId)
+                return false;
+
+            if (process.MainWindowHandle != IntPtr.Zero)
+                return false; // a client the user can see -- not a background resident
+
+            DateTime startTime;
+
+            try
+            {
+                startTime = process.StartTime;
+            }
+            catch
+            {
+                return false; // can't age it, so don't assume it's disposable
+            }
+
+            return DateTime.Now - startTime >= BackgroundGracePeriod;
+        }
 
         private static bool HasLiveProcess(IEnumerable<string> names)
         {

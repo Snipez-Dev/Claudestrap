@@ -587,6 +587,8 @@ namespace Claudestrap
                 string rbxLogDir = Path.Combine(Paths.LocalAppData, "Roblox", "logs");
                 Directory.CreateDirectory(rbxLogDir);
 
+                ClearTrayResidentsForAccountSwitch();
+
                 string? logFileName = await WaitForLogFileAsync(rbxLogDir, startInfo, ct);
 
                 if (string.IsNullOrEmpty(logFileName))
@@ -622,6 +624,28 @@ namespace Claudestrap
             {
                 StopMemoryAndProcessOptimizer();
             }
+        }
+
+        /// <summary>
+        /// Last-moment cleanup for account switches. LaunchHandler already clears Roblox's
+        /// tray resident, but everything in between -- update check, mod sync, the loading
+        /// screen -- gives Roblox seconds to put a new one up, and whichever resident
+        /// exists at spawn time is the process Windows hands the launch to. It would then
+        /// restore its own account instead of redeeming this launch's auth ticket, so do
+        /// it again right before the client actually starts.
+        /// </summary>
+        private void ClearTrayResidentsForAccountSwitch()
+        {
+            const string LOG_IDENT = "Bootstrapper::ClearTrayResidentsForAccountSwitch";
+
+            if (_launchMode != LaunchMode.Player)
+                return;
+
+            if (!(_launchCommandLine ?? string.Empty).Contains("gameinfo:", StringComparison.OrdinalIgnoreCase))
+                return;
+
+            App.Logger.WriteLine(LOG_IDENT, "Account switch launch, clearing background Roblox processes");
+            AccountLauncher.CloseBackgroundPlayers();
         }
 
         private void NormalizeRobloxLocale()

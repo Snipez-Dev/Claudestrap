@@ -303,6 +303,27 @@ namespace Claudestrap
                 }
             }
 
+            // A launch carrying an auth ticket means a specific account was picked, so
+            // no Roblox process may survive into it: whichever one is already there --
+            // a visible client, or the invisible tray resident left behind when the
+            // window was closed -- owns the client singleton, gets handed our launch
+            // args, and restores the account it is already signed in as instead of
+            // redeeming the ticket.
+            bool accountSwitch = launchMode == LaunchMode.Player
+                && App.LaunchSettings.RobloxLaunchArgs.Contains("gameinfo:", StringComparison.OrdinalIgnoreCase);
+
+            if (accountSwitch)
+            {
+                App.Logger.WriteLine(LOG_IDENT, "Account switch requested, clearing background Roblox processes");
+                AccountLauncher.CloseBackgroundPlayers();
+
+                if (robloxRunning && !multiInstanceEnabled)
+                {
+                    App.Logger.WriteLine(LOG_IDENT, "Another account is already running, closing it before switching");
+                    AccountLauncher.CloseRunningPlayer();
+                }
+            }
+
             if (multiInstanceEnabled)
             {
                 App.Logger.WriteLine(LOG_IDENT, "Multi-instance launching enabled, preparing singleton bypass");
