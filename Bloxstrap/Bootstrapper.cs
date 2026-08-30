@@ -540,7 +540,7 @@ namespace Claudestrap
                 // now the WEAO/RDD-pinned build the executor targets — not the
                 // live Roblox release. Label the download UI accordingly.
                 _versionFromRdd = true;
-                _versionSourceLabel = $"RDD (executor: {executorTitle})";
+                _versionSourceLabel = $"Executor Sync ({executorTitle})";
 
                 // Persist the current sync target so callers/UI can display it and
                 // so the "did the executor bump its version?" check on next launch

@@ -37,7 +37,7 @@ namespace Claudestrap.UI.ViewModels.Bootstrapper
             {
                 if (App.Settings?.Prop?.ExecutorSyncEnabled == true &&
                     !string.IsNullOrWhiteSpace(App.Settings.Prop.SelectedExecutor))
-                    return $"RDD · {App.Settings.Prop.SelectedExecutor}";
+                    return $"Executor Sync · {App.Settings.Prop.SelectedExecutor}";
                 return "Official Roblox";
             }
         }

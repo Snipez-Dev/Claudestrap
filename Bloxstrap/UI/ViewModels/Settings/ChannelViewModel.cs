@@ -237,14 +237,14 @@ namespace Claudestrap.UI.ViewModels.Settings
             var executor = await WeaoAPI.FindExecutorAsync(title).ConfigureAwait(true);
             if (executor == null)
             {
-                ExecutorStatusText = $"'{title}' not found on WEAO.";
+                ExecutorStatusText = $"'{title}' isn't on the executor list.";
                 return;
             }
 
             var updateMark = executor.UpdateStatus ? "up to date" : "outdated vs live Roblox";
             ExecutorStatusText =
                 $"{executor.Title} → {executor.RbxVersion} ({updateMark}). " +
-                $"Claudestrap will install this build via setup.rbxcdn.com (RDD) on every launch.";
+                $"Claudestrap will install this Roblox version on every launch.";
         }
 
         #endregion

@@ -309,7 +309,7 @@
         </Expander>
 
         <Expander x:Name="ExecutorSyncExpander"
-                  Header="Executor Version Sync (WEAO / RDD)"
+                  Header="Executor Sync"
                   IsExpanded="False"
                   Margin="0,8,0,0">
             <StackPanel Orientation="Vertical">
@@ -318,7 +318,7 @@
                     FontSize="12"
                     Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                     TextWrapping="Wrap"
-                    Text="Pin Roblox to the version your selected executor supports. On every launch, Claudestrap asks weao.xyz which build the executor supports and installs it via setup.rbxcdn.com (the source RDD fronts). If the executor updates, the client re-syncs automatically." />
+                    Text="Keeps Roblox on the version your executor supports instead of updating to the newest one. Claudestrap checks on every launch and installs that build; once the executor catches up, it moves you forward automatically." />
 
                 <controls:OptionControl
                     x:Name="ExecutorSyncOption"

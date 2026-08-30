@@ -152,7 +152,7 @@ namespace Claudestrap.UI.ViewModels.Settings
             var executor = await WeaoAPI.FindExecutorAsync(title).ConfigureAwait(true);
             if (executor == null)
             {
-                ExecutorStatusText = $"'{title}' not found on WEAO.";
+                ExecutorStatusText = $"'{title}' isn't on the executor list.";
                 return;
             }
 
@@ -161,7 +161,7 @@ namespace Claudestrap.UI.ViewModels.Settings
             var supportLabel = executor.UpdateStatus ? "Updated (works for the newest)" : "Downgrade (works for the last)";
             ExecutorStatusText =
                 $"{executor.Title} → {executor.RbxVersion} — {supportLabel}. " +
-                $"Claudestrap will download this build from RDD (rdd.weao.gg) on every launch.";
+                $"Claudestrap will install this Roblox version on every launch.";
         }
 
         #endregion
