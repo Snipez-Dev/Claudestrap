@@ -59,7 +59,7 @@ namespace Claudestrap.UI.ViewModels.Installer
     {
         public string Version => string.Format(Strings.Menu_About_Version, App.Version);
 
-        /// <summary>Short version pill text — "v1.1.1.0".</summary>
+        /// <summary>Short version pill text — "v1.1.1.1".</summary>
         public string VersionShort => "v" + App.Version;
 
         /// <summary>Installed Roblox version guid, or "no build installed" when none yet.</summary>

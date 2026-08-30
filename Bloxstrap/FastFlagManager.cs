@@ -44,6 +44,17 @@ namespace Claudestrap
             // Memory Probing
             { "Memory.Probe", "DFFlagPerformanceControlEnableMemoryProbing3" },
 
+            // Memory utility curve, written alongside Memory.Probe -- the view model set
+            // these seven for a long time without them being defined here, so every one
+            // of those writes silently went nowhere.
+            { "Memory.probe2", "DFIntMemoryUtilityCurveBaseHundrethsPercent" },
+            { "Memory.probe3", "DFIntMemoryUtilityCurveFinalDeltaHundredths" },
+            { "Memory.probe4", "DFIntMemoryUtilityCurveInitialDeltaHundredths" },
+            { "Memory.probe5", "DFIntMemoryUtilityCurveNumSegments" },
+            { "Memory.probe6", "DFIntMemoryUtilityCurvePenaltyBuffer" },
+            { "Memory.probe7", "DFIntMemoryUtilityCurveSlopeMultiplierHundreths" },
+            { "Memory.probe8", "DFIntMemoryUtilityCurveTotalMemoryReserve" },
+
             // RAM limit (user-controlled, in MB)
             { "Memory.MaxRamMB", "DFIntMemCacheMaxCapacityMB" },
 
@@ -713,8 +724,19 @@ public static IReadOnlyDictionary<RefreshRate, string?> RefreshRates => new Dict
 
         public void SetPreset(string prefix, object? value)
         {
+            int matched = 0;
+
             foreach (var pair in PresetFlags.Where(x => x.Key.StartsWith(prefix)))
+            {
                 SetValue(pair.Value, value);
+                matched++;
+            }
+
+            // A prefix nothing matches used to be a silent no-op, which is how several
+            // settings toggles ended up writing no flag at all while still looking like
+            // they worked. GetPreset already logs this case; now the write side does too.
+            if (matched == 0)
+                App.Logger.WriteLine("FastFlagManager::SetPreset", $"No preset matches '{prefix}', nothing written");
         }
 
         public void SetPresetEnum(string prefix, string target, object? value)

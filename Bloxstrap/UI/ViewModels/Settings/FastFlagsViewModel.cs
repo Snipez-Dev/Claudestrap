@@ -105,11 +105,13 @@ namespace Claudestrap.UI.ViewModels.Settings
 
         public bool LightCulling
         {
-            get => App.FastFlags.GetPreset("Rendering.GpuCulling") == "True";
+            // The presets are System.*, not Rendering.* -- pointed at the latter, this
+            // toggle wrote no flag at all and never stayed on.
+            get => App.FastFlags.GetPreset("System.GpuCulling") == "True";
             set
             {
-                App.FastFlags.SetPreset("Rendering.GpuCulling", value ? "True" : null);
-                App.FastFlags.SetPreset("Rendering.CpuCulling", value ? "True" : null);
+                App.FastFlags.SetPreset("System.GpuCulling", value ? "True" : null);
+                App.FastFlags.SetPreset("System.CpuCulling", value ? "True" : null);
             }
         }
 
@@ -946,6 +948,77 @@ namespace Claudestrap.UI.ViewModels.Settings
                     App.FastFlags.SetPreset("Rendering.FrmQuality", FastFlagManager.QualityLevels[value]);
                 }
             }
+        }
+
+        /// <summary>
+        /// One-click FPS preset. Every flag it writes is one the settings page already
+        /// exposes individually -- this just applies a coherent set of them, since
+        /// hunting down a dozen switches across the page is how most people give up.
+        /// </summary>
+        public IReadOnlyList<string> FpsBoostLevels { get; } = new[] { "Off", "Balanced", "Maximum" };
+
+        // Cheap wins that leave the game looking like the game.
+        private static readonly (string Preset, string Value)[] BalancedBoost =
+        {
+            ("System.GpuCulling", "True"),
+            ("System.CpuCulling", "True"),
+            ("Rendering.AvoidSleep", "True"),
+            ("Rendering.DisablePostFX", "True"),
+            ("Network.MeshPreloadding", "True"),
+        };
+
+        // Balanced plus everything that trades visual fidelity for frames.
+        private static readonly (string Preset, string Value)[] MaximumBoost =
+        {
+            ("Rendering.FRMQualityOverride", "1"),
+            ("Rendering.MSAA1", "0"),
+            ("Rendering.MSAA2", "0"),
+            ("Rendering.ShadowIntensity", "0"),
+            ("Rendering.RemoveGrass1", "0"),
+            ("Rendering.RemoveGrass2", "0"),
+            ("Rendering.RemoveGrass3", "0"),
+        };
+
+        public string SelectedFpsBoost
+        {
+            get
+            {
+                if (!IsApplied(BalancedBoost))
+                    return "Off";
+
+                return IsApplied(MaximumBoost) ? "Maximum" : "Balanced";
+            }
+            set
+            {
+                bool balanced = value is "Balanced" or "Maximum";
+                bool maximum = value == "Maximum";
+
+                Apply(BalancedBoost, balanced);
+                Apply(MaximumBoost, maximum);
+
+                // Maximum forces voxel lighting; SetPresetEnum clears the other lighting
+                // modes, so leaving it alone on the way back out would strand the user on
+                // voxel with no visible reason why.
+                if (maximum)
+                    App.FastFlags.SetPresetEnum("Rendering.Lighting", "Voxel", "True");
+
+                OnPropertyChanged(nameof(SelectedFpsBoost));
+                OnPropertyChanged(nameof(LightCulling));
+                OnPropertyChanged(nameof(DisablePostFX));
+                OnPropertyChanged(nameof(TaskSchedulerAvoidingSleep));
+                OnPropertyChanged(nameof(DisablePlayerShadows));
+                OnPropertyChanged(nameof(SelectedMSAALevel));
+                OnPropertyChanged(nameof(SelectedLightingMode));
+            }
+        }
+
+        private static bool IsApplied((string Preset, string Value)[] set)
+            => set.All(x => App.FastFlags.GetPreset(x.Preset) == x.Value);
+
+        private static void Apply((string Preset, string Value)[] set, bool on)
+        {
+            foreach (var (preset, value) in set)
+                App.FastFlags.SetPreset(preset, on ? value : null);
         }
 
         public bool DisablePostFX

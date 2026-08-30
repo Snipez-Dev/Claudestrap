@@ -45,6 +45,8 @@ are never uploaded anywhere.
 
 Ready-made tweaks you can turn on with a switch, no config files to edit:
 
+- **FPS Boost** — one setting that applies a whole set of performance flags at once,
+  either balanced (game still looks normal) or maximum (fidelity traded for frames)
 - **Graphics presets** for AMD and NVIDIA cards
 - **Performance tweaks** — lighting, textures, rendering and network options
 - **RAM limit** — cap how much memory Roblox is allowed to use
@@ -93,7 +95,7 @@ for it.
 Claudestrap checks for a newer version each time it starts and asks whether you want
 it. Nothing is downloaded or installed without your confirmation.
 
-You can check manually under **Settings → Channel → Check for Updates**, or turn the
+You can check manually under **Settings → Check for Updates**, or turn the
 automatic check off on the same page.
 
 ## FAQ

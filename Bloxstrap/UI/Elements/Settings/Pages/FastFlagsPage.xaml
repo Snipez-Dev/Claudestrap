@@ -511,6 +511,16 @@ Margin="8,0,8,0" />
                     <StackPanel>
 
                         <controls:OptionControl
+                            Header="FPS Boost"
+                            Description="Applies a set of the switches below in one go. Balanced keeps the game looking normal; Maximum trades visual quality for frames (voxel lighting, no shadows, no grass, no anti-aliasing).">
+                            <ComboBox
+                                Width="160"
+                                HorizontalAlignment="Left"
+                                ItemsSource="{Binding FpsBoostLevels}"
+                                SelectedItem="{Binding SelectedFpsBoost, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                        </controls:OptionControl>
+
+                        <controls:OptionControl
                             Header="GPU + CPU Light Culling"
                             Description="Skips rendering objects outside the camera frustum. Good FPS gain in dense scenes.">
                             <ui:ToggleSwitch IsChecked="{Binding LightCulling, Mode=TwoWay}" />
