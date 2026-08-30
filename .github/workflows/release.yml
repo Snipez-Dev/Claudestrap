@@ -1,5 +1,10 @@
 name: Release
 
+# version.txt is maintained by hand in the same commit that bumps the csproj, so
+# this workflow only builds and publishes -- it deliberately doesn't commit back
+# to main. A bot pushing that bump put github-actions[bot] in the repo's
+# contributor list for a one-line file we already keep in sync ourselves.
+
 on:
   push:
     tags:
@@ -50,15 +55,3 @@ jobs:
           tag_name: ${{ steps.version.outputs.tag }}
           name: ${{ steps.version.outputs.tag }}
           files: publish/Claudestrap.exe
-
-      - name: Bump version.txt on main
-        shell: bash
-        run: |
-          git fetch origin main
-          git checkout main
-          echo "${{ steps.version.outputs.version }}" > version.txt
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add version.txt
-          git diff --cached --quiet || git commit -m "Bump version.txt to ${{ steps.version.outputs.tag }}"
-          git push origin main
