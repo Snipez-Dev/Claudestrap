@@ -14,6 +14,7 @@ using System.Windows.Shapes;
 using Claudestrap.UI.ViewModels.Dialogs;
 using Claudestrap.UI.ViewModels.Installer;
 using Wpf.Ui.Mvvm.Interfaces;
+using Claudestrap.Utility;
 
 namespace Claudestrap.UI.Elements.Dialogs
 {
@@ -45,8 +46,7 @@ namespace Claudestrap.UI.Elements.Dialogs
             if (e.ChangedButton != MouseButton.Left) return;
             if (e.LeftButton != MouseButtonState.Pressed) return;
 
-            try { DragMove(); }
-            catch (InvalidOperationException) { }
+            WindowDrag.Begin(this);
         }
 
         private void Minimize_Click(object sender, RoutedEventArgs e)

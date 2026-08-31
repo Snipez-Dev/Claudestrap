@@ -8,6 +8,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Shell;
 using System.Windows.Threading;
 using System.Windows.Forms;
+using Claudestrap.Utility;
 
 namespace Claudestrap.UI.Elements.Bootstrapper
 {
@@ -134,8 +135,7 @@ namespace Claudestrap.UI.Elements.Bootstrapper
             if (e.ChangedButton != System.Windows.Input.MouseButton.Left) return;
             if (e.LeftButton != System.Windows.Input.MouseButtonState.Pressed) return;
 
-            try { DragMove(); }
-            catch (InvalidOperationException) { }
+            WindowDrag.Begin(this);
         }
 
         private void Minimize_Click(object sender, RoutedEventArgs e)

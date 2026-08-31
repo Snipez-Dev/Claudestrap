@@ -122,7 +122,18 @@ namespace Claudestrap
             {
                 // Nothing of ours is involved and nothing is broken afterwards -- killing
                 // the app over it just loses the user's session for a hiccup in WPF.
-                Logger.WriteLine("App::GlobalExceptionHandler", "Ignoring WPF input-race NullReferenceException");
+                // These arrive one per mouse message, so a single drag can produce dozens;
+                // logging every one of them buries everything else in the file.
+                var now = DateTime.UtcNow;
+
+                if (now - _lastInputRaceLog > TimeSpan.FromSeconds(10))
+                {
+                    _lastInputRaceLog = now;
+                    Logger.WriteLine("App::GlobalExceptionHandler",
+                        $"Ignoring NullReferenceException from WPF input handling ({_inputRaceCount + 1} so far this session)");
+                }
+
+                _inputRaceCount++;
                 return;
             }
 
@@ -139,6 +150,9 @@ namespace Claudestrap
         /// on our side of that stack and nothing is left in a bad state, so it must not
         /// take the whole app down with a crash dialog.
         /// </summary>
+        private static DateTime _lastInputRaceLog = DateTime.MinValue;
+        private static int _inputRaceCount;
+
         private static bool IsWpfInputRace(Exception ex)
         {
             if (ex is not NullReferenceException)
@@ -153,8 +167,12 @@ namespace Claudestrap
             if (stack.Contains("Claudestrap", StringComparison.Ordinal))
                 return false;
 
-            return stack.Contains("System.Windows.Input.KeyboardDevice", StringComparison.Ordinal)
-                || stack.Contains("System.Windows.Input.MouseDevice", StringComparison.Ordinal);
+            // Any of WPF's input devices, not just the two seen first: the same race has
+            // surfaced from KeyboardDevice, MouseDevice and CommandDevice, and naming them
+            // one at a time only means the next one crashes the app again. The window
+            // messages that feed them come through Interop.Hwnd*InputProvider.
+            return stack.Contains("System.Windows.Input.", StringComparison.Ordinal)
+                && stack.Contains("System.Windows.Interop.Hwnd", StringComparison.Ordinal);
         }
 
         public static void FinalizeExceptionHandling(AggregateException ex)

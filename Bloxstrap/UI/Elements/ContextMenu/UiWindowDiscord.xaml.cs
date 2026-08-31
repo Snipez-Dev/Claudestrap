@@ -6,6 +6,7 @@ using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Threading;
 using Claudestrap.UI.Chat;
+using Claudestrap.Utility;
 
 namespace Claudestrap.UI.Elements.Overlay
 {
@@ -29,7 +30,7 @@ namespace Claudestrap.UI.Elements.Overlay
         {
             if (e.ButtonState == MouseButtonState.Pressed)
             {
-                DragMove();
+                Claudestrap.Utility.WindowDrag.Begin(this);
             }
         }
 

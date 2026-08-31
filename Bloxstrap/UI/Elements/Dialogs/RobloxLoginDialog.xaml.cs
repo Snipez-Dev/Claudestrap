@@ -156,8 +156,7 @@ namespace Claudestrap.UI.Elements.Dialogs
             if (e.ChangedButton != MouseButton.Left) return;
             if (e.LeftButton != MouseButtonState.Pressed) return;
 
-            try { DragMove(); }
-            catch (InvalidOperationException) { }
+            WindowDrag.Begin(this);
         }
 
         private void Minimize_Click(object sender, RoutedEventArgs e)

@@ -10,6 +10,7 @@ using System.Windows.Input;
 using System.Windows.Media.Animation;
 using Wpf.Ui.Common;
 using static System.Net.Mime.MediaTypeNames;
+using Claudestrap.Utility;
 
 namespace Claudestrap.UI.Elements.Overlay
 {
@@ -43,7 +44,7 @@ namespace Claudestrap.UI.Elements.Overlay
             {
                 try
                 {
-                    this.DragMove();
+                    WindowDrag.Begin(this);
                 }
                 catch {}
             }
@@ -320,7 +321,7 @@ namespace Claudestrap.UI.Elements.Overlay
         private void Grid_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             if (e.ButtonState == MouseButtonState.Pressed)
-                DragMove();
+                WindowDrag.Begin(this);
         }
 
         private void ExitButton_Click(object sender, RoutedEventArgs e)

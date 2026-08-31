@@ -2,6 +2,7 @@ using System;
 using System.Windows;
 using System.Windows.Input;
 using Claudestrap.UI.ViewModels;
+using Claudestrap.Utility;
 
 namespace Claudestrap.UI.Elements.ContextMenu
 {
@@ -18,8 +19,7 @@ namespace Claudestrap.UI.Elements.ContextMenu
             if (e.ChangedButton != MouseButton.Left) return;
             if (e.LeftButton != MouseButtonState.Pressed) return;
 
-            try { DragMove(); }
-            catch (InvalidOperationException) { }
+            WindowDrag.Begin(this);
         }
 
         private void Minimize_Click(object sender, RoutedEventArgs e)
