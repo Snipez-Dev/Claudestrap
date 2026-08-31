@@ -379,6 +379,12 @@ namespace Claudestrap
                 || Paths.Process.StartsWith(Path.Combine(Paths.LocalAppData, "Temp"))
                 || Paths.Process.StartsWith(Paths.TempUpdates);
 
+            // Checked before the hashes below: those read both executables end to end,
+            // and at 200 MB each that was a fifth of a second of disk on every single
+            // launch just to reach a return statement.
+            if (!isAutoUpgrade)
+                return;
+
             var existingVer = FileVersionInfo.GetVersionInfo(Paths.Application).ProductVersion;
             var currentVer = FileVersionInfo.GetVersionInfo(Paths.Process).ProductVersion;
 
@@ -396,12 +402,6 @@ namespace Claudestrap
                 if (result != MessageBoxResult.Yes)
                     return;
             }
-
-            // Prompt disabled: users running a standalone build (e.g. the desktop drop)
-            // kept getting asked to sync the AppData install every launch. We just
-            // skip the self-upgrade unless it was a real auto-update flow.
-            if (!isAutoUpgrade)
-                return;
 
             App.Logger.WriteLine(LOG_IDENT, "Doing upgrade");
 

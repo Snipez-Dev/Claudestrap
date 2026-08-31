@@ -28,8 +28,18 @@ public static class GithubUpdater
 {
     private static readonly HttpClient http = new()
     {
+        // HttpClient's 100 second default applies to the whole operation, download
+        // included -- and the release binary is over 200 MB, which takes longer than
+        // that on anything below ~20 Mbit. Updating was impossible on a slow line, so
+        // the download is unbounded and the checks below carry their own deadlines.
+        Timeout = Timeout.InfiniteTimeSpan,
         DefaultRequestHeaders = { { "User-Agent", "Claudestrap-Updater" } }
     };
+
+    /// <summary>How long to wait for the version probe before carrying on without it.
+    /// It's a seven byte file; if it hasn't answered by now the network is in no state
+    /// to download 200 MB either, and the app should not sit there unopened.</summary>
+    private static readonly TimeSpan VersionProbeTimeout = TimeSpan.FromSeconds(8);
 
     private static bool _checkedThisSession;
 
@@ -145,7 +155,8 @@ public static class GithubUpdater
     {
         try
         {
-            string response = await http.GetStringAsync(VersionFileUrl);
+            using var timeout = new CancellationTokenSource(VersionProbeTimeout);
+            string response = await http.GetStringAsync(VersionFileUrl, timeout.Token);
             string version = response.Trim();
             return string.IsNullOrWhiteSpace(version) ? null : version;
         }

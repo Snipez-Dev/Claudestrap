@@ -217,28 +217,38 @@ namespace Claudestrap.UI.ViewModels.Installer
         /// surface a relogin icon for accounts whose session has expired.</summary>
         private async Task RefreshLoginStatusAsync()
         {
-            foreach (var item in AccountOptions.Where(o => o.Model is not null).ToList())
+            // One request per account, and they don't depend on each other -- run them
+            // together. Checked one after the other, the dropdown took as long as the
+            // sum of every account's round trip to settle.
+            var checks = AccountOptions
+                .Where(o => o.Model is not null)
+                .Select(CheckLoginAsync)
+                .ToList();
+
+            await Task.WhenAll(checks).ConfigureAwait(true);
+        }
+
+        private async Task CheckLoginAsync(AccountDropdownItem item)
+        {
+            if (_backgroundWork.IsCancellationRequested)
+                return;
+
+            string? cookie = AccountCookieProtector.Unprotect(item.Model!.EncryptedCookie);
+
+            if (string.IsNullOrEmpty(cookie))
             {
-                if (_backgroundWork.IsCancellationRequested)
-                    return;
-
-                string? cookie = AccountCookieProtector.Unprotect(item.Model!.EncryptedCookie);
-
-                if (string.IsNullOrEmpty(cookie))
-                {
-                    item.IsLoggedOut = true;
-                    continue;
-                }
-
-                var info = await RobloxAuthApi.FetchUserInfoAsync(cookie).ConfigureAwait(true);
-
-                // The answer can land long after the user has picked an account and the
-                // window has closed -- one network round trip per saved account.
-                if (_backgroundWork.IsCancellationRequested)
-                    return;
-
-                item.IsLoggedOut = !info.Ok;
+                item.IsLoggedOut = true;
+                return;
             }
+
+            var info = await RobloxAuthApi.FetchUserInfoAsync(cookie).ConfigureAwait(true);
+
+            // The answer can land long after the user has picked an account and the
+            // window has closed.
+            if (_backgroundWork.IsCancellationRequested)
+                return;
+
+            item.IsLoggedOut = !info.Ok;
         }
 
         private void DeleteAccount(AccountDropdownItem? item)

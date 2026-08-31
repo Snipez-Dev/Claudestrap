@@ -454,6 +454,8 @@ namespace Claudestrap
             _memoryTrimCts = new CancellationTokenSource();
             CancellationToken token = _memoryTrimCts.Token;
 
+            int trimPasses = 0;
+
             Task.Run(async () =>
             {
                 while (!token.IsCancellationRequested)
@@ -462,15 +464,21 @@ namespace Claudestrap
                     {
                         if (DiscordClient != null)
                         {
-                            GC.Collect();
-                            GC.WaitForPendingFinalizers();
-                            GC.Collect();
-#if NET5_0_OR_GREATER
-                            System.Runtime.GCSettings.LargeObjectHeapCompactionMode =
-                                System.Runtime.GCLargeObjectHeapCompactionMode.CompactOnce;
-                            GC.Collect();
-#endif
-                            Logger.WriteLine("App::MemoryTrim", "Memory trimmed successfully (background).");
+                            // Was three blocking collections plus a large-object-heap
+                            // compaction every five seconds. That pauses every thread each
+                            // time, which is a steady CPU tax and shows up as stutter, and
+                            // it reclaims almost nothing on a five second old heap. One
+                            // background collection, and the heap only gets compacted on
+                            // every sixth pass -- roughly once a minute.
+                            GC.Collect(GC.MaxGeneration, GCCollectionMode.Optimized, blocking: false);
+
+                            if (++trimPasses % 6 == 0)
+                            {
+                                System.Runtime.GCSettings.LargeObjectHeapCompactionMode =
+                                    System.Runtime.GCLargeObjectHeapCompactionMode.CompactOnce;
+                                GC.Collect(GC.MaxGeneration, GCCollectionMode.Optimized, blocking: false);
+                                Logger.WriteLine("App::MemoryTrim", "Heap compacted (background).");
+                            }
                         }
                     }
                     catch (Exception ex)
@@ -478,7 +486,7 @@ namespace Claudestrap
                         Logger.WriteException("App::MemoryTrim", ex);
                     }
 
-                    await Task.Delay(TimeSpan.FromSeconds(5), token);
+                    await Task.Delay(TimeSpan.FromSeconds(10), token);
                 }
             }, token);
         }

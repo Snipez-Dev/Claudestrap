@@ -217,16 +217,22 @@ namespace Claudestrap
             // Check for updates right as the app opens, not just when the user presses
             // Play -- CheckForUpdateAsync only actually runs once per session, so this
             // doesn't double-prompt if LaunchRoblox's own bootstrapper check also runs.
+            // Started before the window is built rather than awaited before it: the check
+            // is a network round trip, building the window is local work, and there is no
+            // reason to spend them one after the other.
+            Task<UpdateCheckResult>? updateCheck = null;
+
 #if (!DEBUG || DEBUG_UPDATER) && !QA_BUILD
             if (App.Settings.Prop.CheckForUpdates && !App.LaunchSettings.UpgradeFlag.Active)
-            {
-                bool updateApplied = await GithubUpdater.CheckForUpdateAsync(quiet: false) == UpdateCheckResult.Applied;
-                if (updateApplied)
-                    return;
-            }
+                updateCheck = GithubUpdater.CheckForUpdateAsync(quiet: false);
 #endif
 
             var dialog = new LaunchMenuDialog();
+
+            // An applied update restarts the app, so the menu must not open on top of it.
+            if (updateCheck is not null && await updateCheck == UpdateCheckResult.Applied)
+                return;
+
             dialog.ShowDialog();
 
             ProcessNextAction(dialog.CloseAction);
