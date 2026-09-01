@@ -9,8 +9,8 @@
 		<UseWPF>true</UseWPF>
 		<UseWindowsForms>True</UseWindowsForms>
 		<ApplicationIcon>Claudestrap.ico</ApplicationIcon>
-		<Version>1.1.1.6</Version>
-		<FileVersion>1.1.1.6</FileVersion>
+		<Version>1.1.1.7</Version>
+		<FileVersion>1.1.1.7</FileVersion>
 		<ApplicationManifest>app.manifest</ApplicationManifest>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<RootNamespace>Claudestrap</RootNamespace>

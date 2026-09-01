@@ -1,3 +1,4 @@
+using System.Windows;
 using Claudestrap.AppData;
 
 namespace Claudestrap.Utility
@@ -21,10 +22,6 @@ namespace Claudestrap.Utility
             string? cookie = AccountCookieProtector.Unprotect(account.EncryptedCookie);
             if (string.IsNullOrEmpty(cookie))
                 return new LaunchUriResult(false, "Could not decrypt this account's saved cookie. Try logging in again.", null);
-
-            string exePath = new RobloxPlayerData().ExecutablePath;
-            if (!File.Exists(exePath))
-                return new LaunchUriResult(false, "Roblox isn't installed yet. Launch Roblox normally once first, then try again.", null);
 
             string? csrf = await RobloxAuthApi.GetCsrfTokenAsync(cookie).ConfigureAwait(false);
             var ticketResult = await RobloxAuthApi.GetAuthTicketAsync(cookie, csrf).ConfigureAwait(false);
@@ -60,6 +57,22 @@ namespace Claudestrap.Utility
             var uriResult = await GetLaunchUriAsync(account).ConfigureAwait(false);
             if (!uriResult.Ok || string.IsNullOrEmpty(uriResult.Uri))
                 return new LaunchResult(false, uriResult.Error);
+
+            // No client on disk -- a fresh profile, or a reset that cleared the recorded
+            // version. Spawning it directly is not an option, but the normal launch flow
+            // downloads Roblox and then starts it with whatever arguments are set, so hand
+            // the ticket to that instead of telling the user to go and install Roblox by
+            // hand. This is the same route the launch menu's play button takes.
+            if (!File.Exists(new RobloxPlayerData().ExecutablePath))
+            {
+                App.Logger.WriteLine(LOG_IDENT, "Roblox isn't installed, launching through the bootstrapper");
+
+                App.LaunchSettings.RobloxLaunchArgs = uriResult.Uri;
+
+                Application.Current.Dispatcher.Invoke(() => LaunchHandler.LaunchRoblox(LaunchMode.Player));
+
+                return new LaunchResult(true, null);
+            }
 
             // Always first: Roblox's tray resident holds the previous account's session
             // and the client singleton even though no window is open, so it would take
