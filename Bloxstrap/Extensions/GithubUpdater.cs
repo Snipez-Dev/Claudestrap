@@ -272,21 +272,68 @@ public static class GithubUpdater
     /// Streams the download to disk instead of buffering the whole file in memory,
     /// reporting progress as it goes. Returns the number of bytes written.
     /// </summary>
+    private const int DownloadAttempts = 4;
+
     private static async Task<long> DownloadWithProgressAsync(string url, string destination, UpdateProgressDialog? progress)
     {
-        using var response = await http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead);
+        long received = 0;
+        long? total = null;
+
+        // A 200 MB transfer takes long enough that a dropped connection partway through
+        // is routine -- a VPN reconnecting, a flaky link, security software closing the
+        // TLS stream. Losing the whole download to that used to leave the user stuck on
+        // the old version with nothing to do about it, so a broken transfer is picked up
+        // from where it stopped instead.
+        for (int attempt = 1; ; attempt++)
+        {
+            try
+            {
+                received = await DownloadChunkAsync(url, destination, received, progress, t => total = t);
+                return received;
+            }
+            catch (Exception ex) when (attempt < DownloadAttempts && IsTransient(ex))
+            {
+                App.Logger.WriteLine("GitHubUpdater",
+                    $"Download interrupted after {received} bytes (attempt {attempt}): {ex.Message}");
+
+                progress?.SetStatus("Connection lost, resuming...", indeterminate: true);
+                await Task.Delay(TimeSpan.FromSeconds(2 * attempt));
+            }
+        }
+    }
+
+    /// <summary>Transfers from <paramref name="from"/> to the end of the file, appending
+    /// to whatever is already on disk. Returns the total number of bytes in the file.</summary>
+    private static async Task<long> DownloadChunkAsync(
+        string url, string destination, long from, UpdateProgressDialog? progress, Action<long?> reportTotal)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, url);
+
+        if (from > 0)
+            request.Headers.Range = new System.Net.Http.Headers.RangeHeaderValue(from, null);
+
+        using var response = await http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
         response.EnsureSuccessStatusCode();
 
-        long? total = response.Content.Headers.ContentLength;
+        // A server that ignores the range sends the whole file again with 200 instead of
+        // 206, so start the file over rather than appending a second copy to the first.
+        bool resuming = from > 0 && response.StatusCode == System.Net.HttpStatusCode.PartialContent;
+        long received = resuming ? from : 0;
+
+        long? total = response.Content.Headers.ContentLength is long length ? received + length : null;
+        reportTotal(total);
 
         progress?.SetStatus("Downloading update...");
-        progress?.SetProgress(0, total);
+        progress?.SetProgress(received, total);
 
         using var source = await response.Content.ReadAsStreamAsync();
-        using var target = new FileStream(destination, FileMode.Create, FileAccess.Write, FileShare.None);
+        using var target = new FileStream(
+            destination,
+            resuming ? FileMode.Append : FileMode.Create,
+            FileAccess.Write,
+            FileShare.None);
 
         byte[] buffer = new byte[81920];
-        long received = 0;
         var lastReport = DateTime.UtcNow;
         int read;
 
@@ -308,4 +355,12 @@ public static class GithubUpdater
 
         return received;
     }
+
+    /// <summary>A connection that died rather than a request that was refused -- worth
+    /// picking up again. A 404 or a full disk is not.</summary>
+    private static bool IsTransient(Exception ex)
+        => ex is IOException
+        || ex is HttpRequestException
+        || ex is System.Net.Sockets.SocketException
+        || (ex.InnerException is not null && IsTransient(ex.InnerException));
 }
