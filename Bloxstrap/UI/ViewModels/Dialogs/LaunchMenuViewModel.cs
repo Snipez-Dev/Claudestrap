@@ -134,7 +134,7 @@ namespace Claudestrap.UI.ViewModels.Installer
         private void CleanTraces()
         {
             var result = Frontend.ShowMessageBox(
-                "Clean Roblox traces (logs, cache, crash dumps)?\nClose Roblox first so files are not locked.",
+                "Delete all of Roblox's local data (saved login session, local storage, logs, cache, downloads)?\nAny open Roblox window will be closed. Studio and your settings are kept.",
                 MessageBoxImage.Question,
                 MessageBoxButton.OKCancel,
                 MessageBoxResult.Cancel);
@@ -144,16 +144,16 @@ namespace Claudestrap.UI.ViewModels.Installer
 
             try
             {
-                int count = Cleaner.CleanRobloxTraces();
+                int count = Cleaner.CleanRobloxData();
                 Frontend.ShowMessageBox(
                     count > 0
-                        ? $"Cleaned {count} Roblox trace files."
-                        : "Nothing to clean — no Roblox traces found.",
+                        ? $"Deleted {count} Roblox data files."
+                        : "Nothing to clean — no Roblox data found.",
                     MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
-                Frontend.ShowMessageBox($"Failed to clean Roblox traces:\n{ex.Message}", MessageBoxImage.Error);
+                Frontend.ShowMessageBox($"Failed to clean Roblox data:\n{ex.Message}", MessageBoxImage.Error);
             }
         }
 

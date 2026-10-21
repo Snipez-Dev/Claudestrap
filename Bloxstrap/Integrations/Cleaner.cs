@@ -82,43 +82,69 @@ namespace Claudestrap.Integrations
         }
 
         /// <summary>
-        /// Hard-clean of Roblox trace artifacts (logs, http cache, crash dumps, temp).
-        /// Deletes every file under the well-known %LOCALAPPDATA%\Roblox locations
-        /// regardless of the configured cleaner age threshold. Returns the file count.
+        /// Player data folders under %LOCALAPPDATA%\Roblox. LocalStorage is the one that
+        /// matters most: RobloxCookies.dat is the client's own saved session, and the
+        /// client sends it along when it redeems an account launch's auth ticket -- a
+        /// stale session there made every account launch fail with "User is moderated"
+        /// (403) until it was removed.
         /// </summary>
-        public static int CleanRobloxTraces()
+        private static readonly string[] RobloxDataDirectories =
         {
-            const string LOG_IDENT = "Cleaner::CleanRobloxTraces";
-            App.Logger.WriteLine(LOG_IDENT, "Cleaning Roblox traces");
+            "LocalStorage",
+            "logs",
+            "http",
+            "Temp",
+            "Downloads",
+            "UniversalApp",
+            "notifications",
+            "rbx-storage",
+            "rbx-storage-sc",
+            "tmp-capture-storage",
+            "Benchmark"
+        };
 
-            var targets = new List<string>
-            {
-                Paths.RobloxLogs,
-                Paths.RobloxCache,
-                System.IO.Path.Combine(Paths.LocalAppData, "Roblox", "Temp"),
-                System.IO.Path.Combine(Paths.LocalAppData, "Roblox", "logs"),
-                System.IO.Path.Combine(Paths.LocalAppData, "Roblox", "http")
-            };
+        private static readonly string[] RobloxDataFiles =
+        {
+            "rbx-storage.db",
+            "rbx-storage.db-shm",
+            "rbx-storage.db-wal",
+            "rbx-storage.id",
+            "AnalysticsSettings.xml"
+        };
+
+        /// <summary>
+        /// Wipes all of Roblox's local player data -- saved session, local storage, logs,
+        /// http cache, downloads and telemetry ids -- regardless of the configured cleaner
+        /// age threshold. Leaves the installed client (Versions), Studio and its plugins,
+        /// and the user's graphics settings alone. Closes every Roblox player first, since
+        /// a running one (the windowless tray resident included) locks these files and
+        /// writes its session straight back. Returns the file count.
+        /// </summary>
+        public static int CleanRobloxData()
+        {
+            const string LOG_IDENT = "Cleaner::CleanRobloxData";
+            App.Logger.WriteLine(LOG_IDENT, "Cleaning Roblox local data");
+
+            AccountLauncher.CloseRunningPlayer();
+            AccountLauncher.CloseBackgroundPlayers();
+
+            string robloxData = System.IO.Path.Combine(Paths.LocalAppData, "Roblox");
 
             int cleaned = 0;
 
-            foreach (var dir in targets)
+            foreach (string name in RobloxDataDirectories)
             {
-                if (String.IsNullOrEmpty(dir) || !Directory.Exists(dir))
+                string dir = System.IO.Path.Combine(robloxData, name);
+
+                if (!Directory.Exists(dir))
                     continue;
 
                 try
                 {
-                    string[] files = RecursivlyGetFiles(dir);
-
-                    foreach (string file in files)
+                    foreach (string file in RecursivlyGetFiles(dir))
                     {
-                        try { File.Delete(file); cleaned++; }
-                        catch (Exception ex)
-                        {
-                            App.Logger.WriteLine(LOG_IDENT, $"Unable to delete {file}");
-                            App.Logger.WriteException(LOG_IDENT, ex);
-                        }
+                        if (TryDeleteFile(file, LOG_IDENT))
+                            cleaned++;
                     }
                 }
                 catch (Exception ex)
@@ -128,8 +154,31 @@ namespace Claudestrap.Integrations
                 }
             }
 
+            foreach (string name in RobloxDataFiles)
+            {
+                string file = System.IO.Path.Combine(robloxData, name);
+
+                if (File.Exists(file) && TryDeleteFile(file, LOG_IDENT))
+                    cleaned++;
+            }
+
             App.Logger.WriteLine(LOG_IDENT, $"Cleaned {cleaned} files");
             return cleaned;
+        }
+
+        private static bool TryDeleteFile(string file, string logIdent)
+        {
+            try
+            {
+                File.Delete(file);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                App.Logger.WriteLine(logIdent, $"Unable to delete {file}");
+                App.Logger.WriteException(logIdent, ex);
+                return false;
+            }
         }
 
         private static bool VerifyFile(string file, DateTime Threshold)
