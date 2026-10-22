@@ -21,7 +21,10 @@ public enum UpdateCheckResult
     Declined,
     /// <summary>Downloaded and installed; the process is about to restart.</summary>
     Applied,
-    Failed
+    Failed,
+    /// <summary>A newer release exists, but this is a multi-file build (Visual Studio /
+    /// dotnet build output) that the single-file release can't replace in place.</summary>
+    NotUpdatable
 }
 
 public static class GithubUpdater
@@ -85,6 +88,12 @@ public static class GithubUpdater
 
             App.Logger.WriteLine("GitHubUpdater", $"Newer release found: {latestTag}");
 
+            if (IsMultiFileBuild())
+            {
+                App.Logger.WriteLine("GitHubUpdater", "Running from a multi-file build, not replacing it with the single-file release.");
+                return UpdateCheckResult.NotUpdatable;
+            }
+
             bool proceed = quiet;
 
             if (!proceed)
@@ -140,6 +149,21 @@ public static class GithubUpdater
             App.Logger.WriteLine("GitHubUpdater", $"Update check failed: {ex.Message}");
             return UpdateCheckResult.Failed;
         }
+    }
+
+    /// <summary>
+    /// True when this process runs from a normal build folder -- a small apphost next to
+    /// Claudestrap.dll, Wpf.Ui.dll and a copy of the runtime -- rather than from the
+    /// single-file release. Swapping just the exe there leaves the release's bundled
+    /// runtime and precompiled code next to the folder's older loose assemblies, and the
+    /// runtime loads those loose ones instead. On 9.0.17 that ran with mismatched code
+    /// and crashed at random with access violations; on 9.0.21 it refuses to start at
+    /// all ("MVID mismatch ... Claudestrap.r2r.dll").
+    /// </summary>
+    private static bool IsMultiFileBuild()
+    {
+        string? dir = Path.GetDirectoryName(Environment.ProcessPath);
+        return dir is not null && File.Exists(Path.Combine(dir, "Claudestrap.dll"));
     }
 
     // Plain-text file at the repo root holding just the latest version number --

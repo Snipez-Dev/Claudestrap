@@ -205,6 +205,12 @@ namespace Claudestrap.UI.Elements.Settings.Pages
                     Frontend.ShowMessageBox("Could not reach GitHub to check for updates.");
                     break;
 
+                case UpdateCheckResult.NotUpdatable:
+                    Frontend.ShowMessageBox(
+                        "A newer version is available, but this copy of Claudestrap is a development build and can't update itself. Rebuild it, or run the installed version instead.",
+                        MessageBoxImage.Information);
+                    break;
+
                 // Applied restarts the app, and Declined/Failed have already been answered
                 // by the updater itself -- saying anything else here would just stack a
                 // second message box on top.
