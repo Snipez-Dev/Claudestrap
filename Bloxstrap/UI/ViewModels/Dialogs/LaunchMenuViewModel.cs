@@ -130,8 +130,23 @@ namespace Claudestrap.UI.ViewModels.Installer
 
         public ICommand RelinkAccountCommand { get; }
 
-        /// <summary>Wipes Roblox trace artifacts (logs, http cache, temp) on demand.</summary>
-        private void CleanTraces()
+        private bool _isCleaning;
+        public bool IsCleaning
+        {
+            get => _isCleaning;
+            private set { _isCleaning = value; OnPropertyChanged(nameof(IsCleaning)); }
+        }
+
+        private double _cleanProgress;
+        /// <summary>0 to 100, drives the progress bar under the Clean button.</summary>
+        public double CleanProgress
+        {
+            get => _cleanProgress;
+            private set { _cleanProgress = value; OnPropertyChanged(nameof(CleanProgress)); }
+        }
+
+        /// <summary>Wipes Roblox's local data on demand, with a progress bar while it runs.</summary>
+        private async Task CleanTracesAsync()
         {
             var result = Frontend.ShowMessageBox(
                 "Delete all of Roblox's local data (saved login session, local storage, logs, cache, downloads)?\nAny open Roblox window will be closed. Studio and your settings are kept.",
@@ -142,9 +157,16 @@ namespace Claudestrap.UI.ViewModels.Installer
             if (result != MessageBoxResult.OK)
                 return;
 
+            CleanProgress = 0;
+            IsCleaning = true;
+
             try
             {
-                int count = Cleaner.CleanRobloxData();
+                // Progress is created here, on the UI thread, so its reports land back on it.
+                var progress = new Progress<double>(fraction => CleanProgress = fraction * 100);
+                int count = await Task.Run(() => Cleaner.CleanRobloxData(progress));
+
+                IsCleaning = false;
                 Frontend.ShowMessageBox(
                     count > 0
                         ? $"Deleted {count} Roblox data files."
@@ -153,6 +175,7 @@ namespace Claudestrap.UI.ViewModels.Installer
             }
             catch (Exception ex)
             {
+                IsCleaning = false;
                 Frontend.ShowMessageBox($"Failed to clean Roblox data:\n{ex.Message}", MessageBoxImage.Error);
             }
         }
@@ -167,7 +190,7 @@ namespace Claudestrap.UI.ViewModels.Installer
             LaunchRobloxCommand = new AsyncRelayCommand(LaunchRobloxAsync);
             LaunchRobloxStudioCommand = new RelayCommand(LaunchRobloxStudio);
             LaunchAboutCommand = new RelayCommand(LaunchAbout);
-            CleanTracesCommand = new RelayCommand(CleanTraces);
+            CleanTracesCommand = new AsyncRelayCommand(CleanTracesAsync);
             DeleteAccountCommand = new RelayCommand<AccountDropdownItem?>(DeleteAccount);
             RelinkAccountCommand = new AsyncRelayCommand<AccountDropdownItem?>(RelinkAccountAsync);
 

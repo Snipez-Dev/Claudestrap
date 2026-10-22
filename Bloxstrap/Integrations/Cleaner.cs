@@ -118,9 +118,10 @@ namespace Claudestrap.Integrations
         /// age threshold. Leaves the installed client (Versions), Studio and its plugins,
         /// and the user's graphics settings alone. Closes every Roblox player first, since
         /// a running one (the windowless tray resident included) locks these files and
-        /// writes its session straight back. Returns the file count.
+        /// writes its session straight back. Returns the file count. <paramref name="progress"/>
+        /// gets the fraction of files handled so far, 0 to 1.
         /// </summary>
-        public static int CleanRobloxData()
+        public static int CleanRobloxData(IProgress<double>? progress = null)
         {
             const string LOG_IDENT = "Cleaner::CleanRobloxData";
             App.Logger.WriteLine(LOG_IDENT, "Cleaning Roblox local data");
@@ -130,7 +131,8 @@ namespace Claudestrap.Integrations
 
             string robloxData = System.IO.Path.Combine(Paths.LocalAppData, "Roblox");
 
-            int cleaned = 0;
+            // Collected up front so the progress bar has a total to count against.
+            var files = new List<string>();
 
             foreach (string name in RobloxDataDirectories)
             {
@@ -141,15 +143,11 @@ namespace Claudestrap.Integrations
 
                 try
                 {
-                    foreach (string file in RecursivlyGetFiles(dir))
-                    {
-                        if (TryDeleteFile(file, LOG_IDENT))
-                            cleaned++;
-                    }
+                    files.AddRange(RecursivlyGetFiles(dir));
                 }
                 catch (Exception ex)
                 {
-                    App.Logger.WriteLine(LOG_IDENT, $"Failed to clean {dir}");
+                    App.Logger.WriteLine(LOG_IDENT, $"Failed to list {dir}");
                     App.Logger.WriteException(LOG_IDENT, ex);
                 }
             }
@@ -158,9 +156,29 @@ namespace Claudestrap.Integrations
             {
                 string file = System.IO.Path.Combine(robloxData, name);
 
-                if (File.Exists(file) && TryDeleteFile(file, LOG_IDENT))
-                    cleaned++;
+                if (File.Exists(file))
+                    files.Add(file);
             }
+
+            int cleaned = 0;
+            int lastPercent = -1;
+
+            for (int i = 0; i < files.Count; i++)
+            {
+                if (TryDeleteFile(files[i], LOG_IDENT))
+                    cleaned++;
+
+                // Only when the whole percent changes -- a cache can hold thousands of
+                // files, and one UI update per file would cost more than the deletes.
+                int percent = (i + 1) * 100 / files.Count;
+                if (percent != lastPercent)
+                {
+                    lastPercent = percent;
+                    progress?.Report(percent / 100.0);
+                }
+            }
+
+            progress?.Report(1.0);
 
             App.Logger.WriteLine(LOG_IDENT, $"Cleaned {cleaned} files");
             return cleaned;

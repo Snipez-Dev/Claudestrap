@@ -429,6 +429,30 @@
                                 Command="{Binding LaunchAboutCommand, Mode=OneTime}"
                                 Content="{x:Static resources:Strings.About_Title}" />
                     </StackPanel>
+
+                    <!-- Clean progress : only while the Clean button is working -->
+                    <StackPanel Width="220" HorizontalAlignment="Center" Margin="0,12,0,0">
+                        <StackPanel.Style>
+                            <Style TargetType="StackPanel">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsCleaning}" Value="True">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </StackPanel.Style>
+                        <ProgressBar Height="4"
+                                     Minimum="0" Maximum="100"
+                                     Value="{Binding CleanProgress, Mode=OneWay}"
+                                     Foreground="{StaticResource ButtonBase}"
+                                     Background="{StaticResource LineColor}"
+                                     BorderThickness="0" />
+                        <TextBlock Margin="0,6,0,0" HorizontalAlignment="Center"
+                                   FontSize="11"
+                                   Foreground="{StaticResource TextDescription}"
+                                   Text="{Binding CleanProgress, Mode=OneWay, StringFormat='Cleaning Roblox data... {0:0}%'}" />
+                    </StackPanel>
                 </StackPanel>
 
                 <!-- =============== BOTTOM ROW : version/commit badges (left) + accounts (right) =============== -->
