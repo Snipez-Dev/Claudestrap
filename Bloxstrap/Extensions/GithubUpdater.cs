@@ -73,7 +73,7 @@ public static class GithubUpdater
             if (string.IsNullOrWhiteSpace(latestTag))
                 return UpdateCheckResult.Unreachable;
 
-            string currentVersion = Assembly.GetExecutingAssembly().GetName().Version!.ToString();
+            string currentVersion = App.Version;
             string remote = latestTag.TrimStart('v', 'V');
 
             bool isNewer = Version.TryParse(remote, out var rv) && Version.TryParse(currentVersion, out var cv)

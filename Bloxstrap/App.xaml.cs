@@ -42,7 +42,11 @@ namespace Claudestrap
 
         public static BuildMetadataAttribute BuildMetadata = Assembly.GetExecutingAssembly().GetCustomAttribute<BuildMetadataAttribute>()!;
 
-        public static string Version = Assembly.GetExecutingAssembly().GetName().Version!.ToString();
+        // Assembly versions always carry four parts, so 1.2.0 would read "1.2.0.0".
+        // Drop the fourth only when it's zero -- 1.1.1.9 style versions keep it.
+        public static string Version = FormatVersion(Assembly.GetExecutingAssembly().GetName().Version!);
+
+        private static string FormatVersion(Version version) => version.ToString(version.Revision > 0 ? 4 : 3);
 
         public static Bootstrapper? Bootstrapper { get; set; } = null!;
         public const int TaskbarProgressMaximum = 100;
