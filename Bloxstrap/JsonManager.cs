@@ -13,6 +13,8 @@ namespace Claudestrap
         public T Prop { get; set; } = new();
         public virtual string ClassName => typeof(T).Name;
         public string? LastFileHash { get; private set; }
+        public bool LastSaveSucceeded { get; private set; }
+        private bool _loadFailed;
         public virtual string BackupsLocation => Path.Combine(Paths.Base, "Backup.json");
         public virtual string FileLocation => Path.Combine(Paths.Base, $"{ClassName}.json");
         public virtual string LOG_IDENT_CLASS => $"JsonManager<{ClassName}>";
@@ -24,25 +26,21 @@ namespace Claudestrap
 
             try
             {
-                if (!File.Exists(FileLocation))
+                if (!File.Exists(FileLocation) && !File.Exists(FileLocation + ".bak"))
                 {
                     App.Logger.WriteLine(LOG_IDENT, "File does not exist, saving defaults.");
+                    _loadFailed = false;
+                    LastFileHash = null;
                     Save();
                     return;
                 }
 
-                string json;
-                using (var stream = new FileStream(FileLocation, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-                using (var reader = new StreamReader(stream))
-                    json = reader.ReadToEnd();
-
-                T? settings = JsonSerializer.Deserialize<T>(json);
-                if (settings is null)
-                    throw new InvalidOperationException("Deserialization returned null.");
-
-                Prop = settings;
-
-                LastFileHash = SafeGetFileHash(FileLocation);
+                var snapshot = AtomicJsonFile.Read<T>(FileLocation);
+                Prop = snapshot.Value;
+                LastFileHash = snapshot.Hash;
+                _loadFailed = false;
+                if (snapshot.Recovered)
+                    App.Logger.WriteLine(LOG_IDENT, "Loaded the last valid backup. The original file is preserved until a successful save.");
                 App.Logger.WriteLine(LOG_IDENT, "Loaded successfully!");
             }
             catch (Exception ex)
@@ -50,33 +48,24 @@ namespace Claudestrap
                 App.Logger.WriteLine(LOG_IDENT, "Failed to load!");
                 App.Logger.WriteException(LOG_IDENT, ex);
 
+                _loadFailed = true;
                 if (alertFailure)
-                {
-                    Frontend.ShowMessageBox($"Failed to load settings:\n\n{ex.Message}", MessageBoxImage.Warning);
-
-                    try
-                    {
-                        string backupPath = FileLocation + ".bak";
-                        File.Copy(FileLocation, backupPath, true);
-                        App.Logger.WriteLine(LOG_IDENT, $"Created backup file: {backupPath}");
-                    }
-                    catch (Exception copyEx)
-                    {
-                        App.Logger.WriteLine(LOG_IDENT, $"Failed to create backup file: {FileLocation}.bak");
-                        App.Logger.WriteException(LOG_IDENT, copyEx);
-                    }
-                }
-
-                Save();
+                    Frontend.ShowMessageBox($"Failed to load settings. The original file has been preserved; saving is disabled until it can be reloaded.\n\n{ex.Message}", MessageBoxImage.Warning);
             }
         }
 
         public virtual void Save()
         {
+            LastSaveSucceeded = false;
             string LOG_IDENT = $"{LOG_IDENT_CLASS}::Save";
             App.Logger.WriteLine(LOG_IDENT, $"Saving to {FileLocation}...");
 
-            Directory.CreateDirectory(Path.GetDirectoryName(FileLocation)!);
+            if (_loadFailed)
+            {
+                App.Logger.WriteLine(LOG_IDENT, "Save blocked because the existing file could not be loaded.");
+                Frontend.ShowMessageBox($"Cannot save {ClassName}: its existing file could not be loaded. Reload it first. The original file is unchanged.", MessageBoxImage.Warning);
+                return;
+            }
 
             const int maxRetries = 5;
             const int delayMs = 100;
@@ -86,10 +75,8 @@ namespace Claudestrap
             {
                 try
                 {
-                    string json = JsonSerializer.Serialize(Prop, new JsonSerializerOptions { WriteIndented = true });
-                    File.WriteAllText(FileLocation, json);
-
-                    LastFileHash = SafeGetFileHash(FileLocation);
+                    LastFileHash = AtomicJsonFile.Write(FileLocation, Prop, LastFileHash);
+                    LastSaveSucceeded = true;
                     App.Logger.WriteLine(LOG_IDENT, "Save complete!");
                     break;
                 }
@@ -119,8 +106,7 @@ namespace Claudestrap
         {
             try
             {
-                using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-                    return MD5Hash.FromFile(path);
+                return AtomicJsonFile.Hash(path);
             }
             catch
             {
@@ -154,8 +140,7 @@ namespace Claudestrap
                 Directory.CreateDirectory(baseDir);
 
                 string filePath = Path.Combine(baseDir, name);
-                string json = JsonSerializer.Serialize(Prop, new JsonSerializerOptions { WriteIndented = true });
-                File.WriteAllText(filePath, json);
+                AtomicJsonFile.Write(filePath, Prop, expectedHash: null, checkForChanges: false);
 
                 App.Logger.WriteLine(LOGGER_STRING, $"Backup '{name}' saved successfully.");
             }

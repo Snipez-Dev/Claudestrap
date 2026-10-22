@@ -27,7 +27,7 @@ namespace Claudestrap.Models
         public string Name
         {
             get => _name;
-            set { _name = value; OnPropertyChanged(); }
+            set { _name = value; OnPropertyChanged(); OnPropertyChanged(nameof(LocalSupport)); }
         }
 
         public string Value
@@ -35,6 +35,7 @@ namespace Claudestrap.Models
             get => _value;
             set { _value = value; OnPropertyChanged(); }
         }
+        public string LocalSupport => FastFlagSupportCatalog.Describe(Name);
 
         public bool Index
         {

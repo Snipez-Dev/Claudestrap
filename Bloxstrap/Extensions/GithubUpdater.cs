@@ -68,6 +68,7 @@ public static class GithubUpdater
 
         try
         {
+            if (PackagedUpdates.IsManaged) return await PackagedUpdates.CheckAsync(quiet);
             string? latestTag = await GetLatestVersionTagAsync();
 
             if (string.IsNullOrWhiteSpace(latestTag))
@@ -88,9 +89,9 @@ public static class GithubUpdater
 
             App.Logger.WriteLine("GitHubUpdater", $"Newer release found: {latestTag}");
 
-            if (IsMultiFileBuild())
+            if (!UpdateBuildPolicy.CanReplace(CurrentUpdateChannel, IsMultiFileBuild()))
             {
-                App.Logger.WriteLine("GitHubUpdater", "Running from a multi-file build, not replacing it with the single-file release.");
+                App.Logger.WriteLine("GitHubUpdater", "This build is protected from upstream replacement: " + UpdateUnavailableReason);
                 return UpdateCheckResult.NotUpdatable;
             }
 
@@ -171,10 +172,6 @@ public static class GithubUpdater
     // sync automatically on every tag push.
     private static string VersionFileUrl => $"https://raw.githubusercontent.com/{App.ProjectRepository}/main/version.txt";
 
-    // GitHub's well-known "latest release" download alias -- always resolves to
-    // whatever the newest release's same-named asset is, no API call needed.
-    private static string LatestExeDownloadUrl => $"https://github.com/{App.ProjectRepository}/releases/latest/download/Claudestrap.exe";
-
     public static async Task<string?> GetLatestVersionTagAsync()
     {
         try
@@ -186,7 +183,8 @@ public static class GithubUpdater
         }
         catch (Exception ex)
         {
-            App.Logger.WriteLine("GitHubUpdater", $"Failed to read version.txt: {ex}");
+            LastError = ex.Message;
+            App.Logger.WriteException("GitHubUpdater", ex);
             return null;
         }
     }
@@ -215,176 +213,66 @@ public static class GithubUpdater
         }
     }
 
+    public static string CurrentUpdateChannel => Assembly.GetExecutingAssembly()
+        .GetCustomAttributes<AssemblyMetadataAttribute>()
+        .FirstOrDefault(attribute => attribute.Key == "ClaudestrapUpdateChannel")?.Value ?? "local";
+
+    public static string UpdateUnavailableReason => PackagedUpdates.IsManaged
+        ? "This packaged build uses its own package feed. Configure that feed under Updates."
+        : IsMultiFileBuild()
+        ? "This multi-file build must be rebuilt from its source."
+        : UpdateBuildPolicy.CanReplace(CurrentUpdateChannel, false)
+            ? "Verified upstream updates are enabled."
+            : "This local build contains custom changes. Installing a standard release would remove them; update it from the local source instead.";
+
+    public static string? LastError { get; private set; }
+
     public static async Task<bool> DownloadAndInstallUpdate(string tag, UpdateProgressDialog? progress = null)
     {
         try
         {
-            App.Logger.WriteLine("GitHubUpdater", $"Downloading update {tag}...");
-            return await UpdateExe(LatestExeDownloadUrl, "Claudestrap.exe", progress);
+            if (!UpdateBuildPolicy.CanReplace(CurrentUpdateChannel, IsMultiFileBuild()))
+                throw new InvalidOperationException(UpdateUnavailableReason);
+
+            string currentExe = Environment.ProcessPath!;
+            using var updateLock = new FileStream(currentExe + ".update.lock", FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
+            progress?.SetStatus("Checking release metadata...", indeterminate: true);
+            string releaseTag = "v" + tag.TrimStart('v', 'V');
+            using var metadataTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+            string metadata = await http.GetStringAsync(
+                $"https://api.github.com/repos/{App.ProjectRepository}/releases/tags/{Uri.EscapeDataString(releaseTag)}", metadataTimeout.Token);
+            using var release = JsonDocument.Parse(metadata);
+            if (release.RootElement.GetProperty("tag_name").GetString() != releaseTag)
+                throw new InvalidDataException("The release tag does not match the requested update.");
+            var asset = release.RootElement.GetProperty("assets").EnumerateArray()
+                .First(item => item.GetProperty("name").GetString() == "Claudestrap.exe");
+            long size = asset.GetProperty("size").GetInt64();
+            string digest = asset.GetProperty("digest").GetString() ?? "";
+            if (!digest.StartsWith("sha256:", StringComparison.OrdinalIgnoreCase))
+                throw new InvalidDataException("This release does not provide a SHA-256 digest.");
+            var url = new Uri(asset.GetProperty("browser_download_url").GetString()!);
+            if (url.Scheme != Uri.UriSchemeHttps || url.Host != "github.com")
+                throw new InvalidDataException("Unexpected release download location.");
+
+            string downloaded = await PersistentUpdateDownload.DownloadAsync(http, url, Path.Combine(Paths.Cache, "Updates"), size, digest[7..],
+                (received, total) => progress?.SetProgress(received, total),
+                status => progress?.SetStatus(status, indeterminate: true));
+            progress?.SetStatus("Installing and checking startup...", indeterminate: true);
+            await ExecutableUpdate.ApplyAsync(downloaded, currentExe,
+                path => UpdateHandoff.StartAndConfirmAsync(path, RestartArguments.Clean(App.LaunchSettings.Args)));
+            try { Directory.Delete(Path.GetDirectoryName(downloaded)!, recursive: true); }
+            catch (IOException ex) { App.Logger.WriteLine("GitHubUpdater", "Update applied; cache cleanup deferred: " + ex.Message); }
+            catch (UnauthorizedAccessException ex) { App.Logger.WriteLine("GitHubUpdater", "Update applied; cache cleanup deferred: " + ex.Message); }
+            App.Logger.WriteLine("GitHubUpdater", "New launcher confirmed startup; completing update.");
+            LastError = null;
         }
         catch (Exception ex)
         {
-            App.Logger.WriteLine("GitHubUpdater", $"Update failed: {ex}");
+            LastError = ex.Message;
+            App.Logger.WriteException("GitHubUpdater", ex);
             return false;
         }
-    }
-
-    private static async Task<bool> UpdateExe(string url, string name, UpdateProgressDialog? progress)
-    {
-        string tempDir = Path.Combine(Path.GetTempPath(), "Claudestrap_Update");
-        Directory.CreateDirectory(tempDir);
-
-        string exePath = Path.Combine(tempDir, name);
-
-        progress?.SetStatus("Connecting to GitHub...", indeterminate: true);
-
-        long received = await DownloadWithProgressAsync(url, exePath, progress);
-
-        if (received == 0)
-        {
-            App.Logger.WriteLine("GitHubUpdater", "Downloaded update was empty, aborting.");
-            return false;
-        }
-
-        progress?.SetStatus("Installing update...", indeterminate: true);
-
-        string currentExe = Environment.ProcessPath!;
-        string backupExe = currentExe + ".old";
-        if (File.Exists(backupExe)) File.Delete(backupExe);
-        File.Move(currentExe, backupExe);
-
-        try
-        {
-            File.Copy(exePath, currentExe, true);
-
-            progress?.SetStatus("Restarting Claudestrap...", indeterminate: true);
-
-            Process.Start(new ProcessStartInfo
-            {
-                FileName = currentExe,
-                UseShellExecute = true
-            });
-        }
-        catch (Exception ex)
-        {
-            // Couldn't finish the swap or launch the new build -- restore the exe this
-            // process is actually running from so a manual restart still works, instead
-            // of silently leaving the old build running with nothing telling the user
-            // the update never actually applied.
-            App.Logger.WriteLine("GitHubUpdater", $"Swap/restart failed, rolling back: {ex.Message}");
-
-            try
-            {
-                if (File.Exists(currentExe)) File.Delete(currentExe);
-                File.Move(backupExe, currentExe);
-            }
-            catch (Exception rollbackEx)
-            {
-                App.Logger.WriteLine("GitHubUpdater", $"Rollback failed: {rollbackEx.Message}");
-            }
-
-            return false;
-        }
-
-        // The new process is up and reading from currentExe; this one's file handle
-        // (backupExe) is no longer needed, so exit immediately rather than racing it.
         Environment.Exit(0);
         return true;
     }
-
-    /// <summary>
-    /// Streams the download to disk instead of buffering the whole file in memory,
-    /// reporting progress as it goes. Returns the number of bytes written.
-    /// </summary>
-    private const int DownloadAttempts = 4;
-
-    private static async Task<long> DownloadWithProgressAsync(string url, string destination, UpdateProgressDialog? progress)
-    {
-        long received = 0;
-        long? total = null;
-
-        // A 200 MB transfer takes long enough that a dropped connection partway through
-        // is routine -- a VPN reconnecting, a flaky link, security software closing the
-        // TLS stream. Losing the whole download to that used to leave the user stuck on
-        // the old version with nothing to do about it, so a broken transfer is picked up
-        // from where it stopped instead.
-        for (int attempt = 1; ; attempt++)
-        {
-            try
-            {
-                received = await DownloadChunkAsync(url, destination, received, progress, t => total = t);
-                return received;
-            }
-            catch (Exception ex) when (attempt < DownloadAttempts && IsTransient(ex))
-            {
-                App.Logger.WriteLine("GitHubUpdater",
-                    $"Download interrupted after {received} bytes (attempt {attempt}): {ex.Message}");
-
-                progress?.SetStatus("Connection lost, resuming...", indeterminate: true);
-                await Task.Delay(TimeSpan.FromSeconds(2 * attempt));
-            }
-        }
-    }
-
-    /// <summary>Transfers from <paramref name="from"/> to the end of the file, appending
-    /// to whatever is already on disk. Returns the total number of bytes in the file.</summary>
-    private static async Task<long> DownloadChunkAsync(
-        string url, string destination, long from, UpdateProgressDialog? progress, Action<long?> reportTotal)
-    {
-        using var request = new HttpRequestMessage(HttpMethod.Get, url);
-
-        if (from > 0)
-            request.Headers.Range = new System.Net.Http.Headers.RangeHeaderValue(from, null);
-
-        using var response = await http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
-        response.EnsureSuccessStatusCode();
-
-        // A server that ignores the range sends the whole file again with 200 instead of
-        // 206, so start the file over rather than appending a second copy to the first.
-        bool resuming = from > 0 && response.StatusCode == System.Net.HttpStatusCode.PartialContent;
-        long received = resuming ? from : 0;
-
-        long? total = response.Content.Headers.ContentLength is long length ? received + length : null;
-        reportTotal(total);
-
-        progress?.SetStatus("Downloading update...");
-        progress?.SetProgress(received, total);
-
-        using var source = await response.Content.ReadAsStreamAsync();
-        using var target = new FileStream(
-            destination,
-            resuming ? FileMode.Append : FileMode.Create,
-            FileAccess.Write,
-            FileShare.None);
-
-        byte[] buffer = new byte[81920];
-        var lastReport = DateTime.UtcNow;
-        int read;
-
-        while ((read = await source.ReadAsync(buffer)) > 0)
-        {
-            await target.WriteAsync(buffer.AsMemory(0, read));
-            received += read;
-
-            // ~2,600 chunks for a 200 MB download -- reporting every one of them would
-            // spend more time on the dispatcher than on the transfer.
-            if (progress is not null && (DateTime.UtcNow - lastReport).TotalMilliseconds >= 100)
-            {
-                progress.SetProgress(received, total);
-                lastReport = DateTime.UtcNow;
-            }
-        }
-
-        progress?.SetProgress(received, total);
-
-        return received;
-    }
-
-    /// <summary>A connection that died rather than a request that was refused -- worth
-    /// picking up again. A 404 or a full disk is not.</summary>
-    private static bool IsTransient(Exception ex)
-        => ex is IOException
-        || ex is HttpRequestException
-        || ex is System.Net.Sockets.SocketException
-        || (ex.InnerException is not null && IsTransient(ex.InnerException));
 }

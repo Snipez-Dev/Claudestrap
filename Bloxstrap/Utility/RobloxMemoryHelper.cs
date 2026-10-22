@@ -18,11 +18,6 @@ public static class RobloxMemoryCleaner
         IntPtr dwMinimumWorkingSetSize,
         IntPtr dwMaximumWorkingSetSize);
 
-    [DllImport("kernel32.dll")]
-    private static extern bool SetPriorityClass(
-        IntPtr hProcess,
-        uint dwPriorityClass);
-
     [DllImport("advapi32.dll", SetLastError = true)]
     private static extern bool OpenProcessToken(
         IntPtr ProcessHandle,
@@ -47,8 +42,6 @@ public static class RobloxMemoryCleaner
     private const uint TOKEN_ADJUST_PRIVILEGES = 0x20;
     private const uint TOKEN_QUERY = 0x8;
     private const uint SE_PRIVILEGE_ENABLED = 0x2;
-
-    private const uint BELOW_NORMAL_PRIORITY_CLASS = 0x00004000;
 
     [StructLayout(LayoutKind.Sequential)]
     private struct LUID
@@ -96,6 +89,8 @@ public static class RobloxMemoryCleaner
 
     public static void CleanAllRobloxMemory()
     {
+        if (App.Settings.Prop.ClientStabilityMode) return;
+
         EnableDebugPrivilege();
 
         var processes = Process.GetProcesses()
@@ -116,7 +111,6 @@ public static class RobloxMemoryCleaner
 
                 EmptyWorkingSet(proc.Handle);
                 SetProcessWorkingSetSize(proc.Handle, (IntPtr)(-1), (IntPtr)(-1));
-                SetPriorityClass(proc.Handle, BELOW_NORMAL_PRIORITY_CLASS);
 
                 proc.Refresh();
                 long after = proc.WorkingSet64;

@@ -32,6 +32,8 @@ namespace Claudestrap
         public LaunchFlag NoGPUFlag { get; } = new("nogpu");
 
         public LaunchFlag UpgradeFlag { get; } = new("upgrade");
+        public LaunchFlag UpdateReadyFlag { get; } = new("updateready");
+        public LaunchFlag UpdateParentFlag { get; } = new("updateparent");
 
         public LaunchFlag PlayerFlag { get; } = new("player");
 

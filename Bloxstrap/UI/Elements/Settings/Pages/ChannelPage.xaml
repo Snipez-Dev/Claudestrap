@@ -17,6 +17,14 @@
     mc:Ignorable="d">
 
     <StackPanel Margin="0,0,14,14">
+        <Expander Header="Eigener Paket-Updatekanal" Margin="0,0,0,12">
+            <StackPanel Margin="8">
+                <TextBlock Text="Für Velopack-Paketbuilds: eigener HTTPS-Feed oder lokaler Release-Ordner. Normale lokale EXE-Builds behalten ihren Überschreibschutz." TextWrapping="Wrap" />
+                <TextBox Text="{Binding PackageUpdateSource, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="0,8,0,4" />
+                <TextBlock Text="Kanal" />
+                <TextBox Text="{Binding PackageUpdateChannel, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="200" HorizontalAlignment="Left" />
+            </StackPanel>
+        </Expander>
         <TextBlock
             Margin="0,0,0,8"
             FontSize="14"

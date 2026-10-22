@@ -111,8 +111,22 @@ namespace Claudestrap
 
             ActivityWatcher?.Start();
 
-            while (Utilities.GetProcessesSafe().Any(x => x.Id == _watcherData.ProcessId))
-                await Task.Delay(500);
+            var diagnostics = App.Settings.Prop.CaptureHangDiagnostics
+                ? new ClientHangDiagnostics(_watcherData.LogFile) : null;
+
+            try
+            {
+                using var process = Process.GetProcessById(_watcherData.ProcessId);
+                while (!process.HasExited)
+                {
+                    if (diagnostics is not null) await diagnostics.ObserveAsync(process);
+                    await Task.Delay(2000);
+                }
+            }
+            catch (ArgumentException)
+            {
+                // The client may have exited before the watcher acquired it.
+            }
 
             if (_watcherData.AutoclosePids is not null)
             {

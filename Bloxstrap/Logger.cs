@@ -20,6 +20,7 @@ namespace Claudestrap
         public bool Initialized { get; private set; }
         public bool NoWriteMode { get; private set; }
         public string? FileLocation { get; private set; }
+        public string? LatestError { get; private set; }
 
         public string AsDocument
         {
@@ -37,17 +38,15 @@ namespace Claudestrap
             }
 
             string directory = useTempDir ? Path.Combine(Paths.TempLogs) : Path.Combine(Paths.Base, "Logs");
-            Directory.CreateDirectory(directory);
-
-            string timestamp = DateTime.UtcNow.ToString("yyyyMMdd'T'HHmmss'Z'");
-            string filename = $"{App.ProjectName}_{timestamp}.log";
+            string filename = LogFileNames.Create(App.ProjectName, DateTime.UtcNow, Environment.ProcessId);
             string location = Path.Combine(directory, filename);
 
             FileLocation = location;
 
             try
             {
-                _fileStream = new FileStream(location, FileMode.Create, FileAccess.Write, FileShare.Read, 4096, useAsync: true);
+                Directory.CreateDirectory(directory);
+                _fileStream = new FileStream(location, FileMode.CreateNew, FileAccess.Write, FileShare.Read, 4096, useAsync: true);
                 Initialized = true;
 
                 // Flush existing history to the file
@@ -79,6 +78,7 @@ namespace Claudestrap
             catch (IOException ex)
             {
                 WriteLine(LOG_IDENT, $"Failed to initialize due to IO exception: {ex.Message}");
+                NoWriteMode = true;
             }
         }
 
@@ -86,7 +86,7 @@ namespace Claudestrap
         {
             if (!Paths.Initialized || !Directory.Exists(directory)) return;
 
-            foreach (FileInfo log in new DirectoryInfo(directory).GetFiles())
+            foreach (FileInfo log in new DirectoryInfo(directory).GetFiles($"{App.ProjectName}_*.log"))
             {
                 if (log.LastWriteTimeUtc.AddDays(7) > DateTime.UtcNow)
                     continue;
@@ -127,6 +127,7 @@ namespace Claudestrap
 
         public void WriteException(string identifier, Exception ex)
         {
+            LatestError = $"{DateTime.UtcNow:u} [{identifier}] {ex.Message}";
             string hresult = $"0x{ex.HResult:X8}";
             WriteLine($"[{identifier}] ({hresult}) {ex}");
         }
@@ -137,9 +138,11 @@ namespace Claudestrap
 
             byte[] buffer = Encoding.UTF8.GetBytes(message + "\r\n");
 
+            bool acquired = false;
             try
             {
                 await _semaphore.WaitAsync().ConfigureAwait(false);
+                acquired = true;
                 await _fileStream.WriteAsync(buffer, 0, buffer.Length).ConfigureAwait(false);
                 await _fileStream.FlushAsync().ConfigureAwait(false);
             }
@@ -147,16 +150,19 @@ namespace Claudestrap
             {
                 // Stream might be disposed during shutdown
             }
+            catch (IOException) { NoWriteMode = true; }
+            catch (UnauthorizedAccessException) { NoWriteMode = true; }
             finally
             {
-                _semaphore.Release();
+                if (acquired) _semaphore.Release();
             }
         }
 
         public void Dispose()
         {
-            _fileStream?.Dispose();
-            _semaphore.Dispose();
+            _semaphore.Wait();
+            try { Initialized = false; _fileStream?.Dispose(); _fileStream = null; }
+            finally { _semaphore.Release(); }
         }
     }
 }

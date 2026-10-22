@@ -30,20 +30,30 @@
             FontSize="14"
             Text="{x:Static resources:Strings.Menu_FastFlags_Description}" />
 
-        <controls:OptionControl Header="Profiles" Visibility="Collapsed">
+        <controls:OptionControl Header="Graphics profile" Description="{Binding GraphicsProfileDescription}">
             <ComboBox
                 Width="200"
                 Margin="5,0,0,0"
                 Padding="10,5,10,5"
                 d:DataContext="{d:DesignInstance Type=settings:FastFlagsViewModel}"
-                ItemsSource="{Binding ProfileModes.Keys, Mode=OneTime}"
-                Text="{Binding SelectedProfileMods, Mode=TwoWay}">
-                <ComboBox.ItemTemplate>
-                    <DataTemplate>
-                        <TextBlock Text="{Binding Path=., Converter={StaticResource EnumNameConverter}}" />
-                    </DataTemplate>
-                </ComboBox.ItemTemplate>
-            </ComboBox>
+                ItemsSource="{Binding GraphicsProfileOptions, Mode=OneTime}"
+                SelectedItem="{Binding SelectedGraphicsProfile, Mode=TwoWay}" />
+        </controls:OptionControl>
+        <Expander Header="FastFlag-Freigabe und Wirkung" Margin="0,4,0,12">
+            <StackPanel Margin="8">
+                <TextBlock Text="{Binding FastFlagSupportSummary}" TextWrapping="Wrap" />
+                <TextBox Text="{Binding FastFlagSupportSource, Mode=OneTime}" IsReadOnly="True" Margin="0,6,0,0" />
+            </StackPanel>
+        </Expander>
+
+        <controls:OptionControl Header="Client stability mode"
+            Description="Skip launcher memory cleaning, process tuning, forced fullscreen and crash-handler termination. Applies on the next launch.">
+            <ui:ToggleSwitch IsChecked="{Binding ClientStabilityMode, Mode=TwoWay}" />
+        </controls:OptionControl>
+
+        <controls:OptionControl Header="Capture hang diagnostics"
+            Description="Save one local report and memory dump per session if Roblox stops responding. Dumps may contain private session data. Nothing is uploaded.">
+            <ui:ToggleSwitch IsChecked="{Binding CaptureHangDiagnostics, Mode=TwoWay}" />
         </controls:OptionControl>
 
         <ui:CardAction
@@ -621,27 +631,27 @@ Margin="8,0,8,0" />
                         </controls:OptionControl>
 
                         <controls:OptionControl
-                            Header="RAM-Limit aktivieren"
-                            Description="Legt fest wie viel Arbeitsspeicher Roblox maximal nutzen darf.">
-                            <ui:ToggleSwitch IsChecked="{Binding RamLimitEnabled, Mode=TwoWay}" />
+                            Header="Speicher-Cache-Ziel aktivieren"
+                            Description="Schreibt ein Speicher-Cache-Ziel als FastFlag. Kein hartes RAM-Limit; die Wirkung hängt vom Roblox-Client ab.">
+                            <ui:ToggleSwitch IsChecked="{Binding MemoryCacheBudgetEnabled, Mode=TwoWay}" />
                         </controls:OptionControl>
 
                         <controls:OptionControl
-                            Header="RAM-Limit (GB)"
-                            Description="{Binding RamLimitLabel}">
+                            Header="Speicher-Cache-Ziel (GB)"
+                            Description="{Binding MemoryCacheBudgetLabel}">
                             <StackPanel Width="220">
                                 <Slider
                                     Minimum="1"
                                     Maximum="32"
                                     TickFrequency="1"
                                     IsSnapToTickEnabled="True"
-                                    IsEnabled="{Binding RamLimitEnabled}"
-                                    Value="{Binding RamLimitMB, Mode=TwoWay}" />
+                                    IsEnabled="{Binding MemoryCacheBudgetEnabled}"
+                                    Value="{Binding MemoryCacheBudgetGB, Mode=TwoWay}" />
                                 <TextBlock
                                     Margin="0,4,0,0"
                                     FontSize="12"
                                     Foreground="Gray"
-                                    Text="{Binding RamLimitLabel}" />
+                                    Text="{Binding MemoryCacheBudgetLabel}" />
                             </StackPanel>
                         </controls:OptionControl>
 

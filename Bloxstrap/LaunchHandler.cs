@@ -212,32 +212,20 @@ namespace Claudestrap
             }
         }
 
-        public static async Task LaunchMenu()
+        public static Task LaunchMenu()
         {
-            // Check for updates right as the app opens, not just when the user presses
-            // Play -- CheckForUpdateAsync only actually runs once per session, so this
-            // doesn't double-prompt if LaunchRoblox's own bootstrapper check also runs.
-            // Started before the window is built rather than awaited before it: the check
-            // is a network round trip, building the window is local work, and there is no
-            // reason to spend them one after the other.
-            Task<UpdateCheckResult>? updateCheck = null;
-
-#if (!DEBUG || DEBUG_UPDATER) && !QA_BUILD
-            if (App.Settings.Prop.CheckForUpdates && !App.LaunchSettings.UpgradeFlag.Active)
-                updateCheck = GithubUpdater.CheckForUpdateAsync(quiet: false);
-#endif
-
             var dialog = new LaunchMenuDialog();
-
-            // An applied update restarts the app, so the menu must not open on top of it.
-            if (updateCheck is not null && await updateCheck == UpdateCheckResult.Applied)
-                return;
-
+            dialog.ContentRendered += async (_, _) =>
+            {
+#if (!DEBUG || DEBUG_UPDATER) && !QA_BUILD
+                if (App.Settings.Prop.CheckForUpdates && !App.LaunchSettings.UpgradeFlag.Active)
+                    await GithubUpdater.CheckForUpdateAsync(quiet: false);
+#endif
+            };
             dialog.ShowDialog();
-
             ProcessNextAction(dialog.CloseAction);
+            return Task.CompletedTask;
         }
-
         public static void LaunchRoblox(LaunchMode launchMode)
         {
             const string LOG_IDENT = "LaunchHandler::LaunchRoblox";
@@ -350,7 +338,7 @@ namespace Claudestrap
 
             Mutex? mutex = null;
 
-            if (App.Settings.Prop.ExclusiveFullscreen)
+            if (App.Settings.Prop.ExclusiveFullscreen && !App.Settings.Prop.ClientStabilityMode)
             {
                 _ = Task.Run(RobloxFullscreen.WaitAndTriggerFullscreen); // redid https://github.com/Claudestrap/Claudestrap/pull/362/changes/f0177af4ec39475a5b5c8ea5adc365dcdba0b0d9#diff-ed77fad50af3a8225af6d4c3e81af6095905805d31369da2b5d54f0c2382180e
             }

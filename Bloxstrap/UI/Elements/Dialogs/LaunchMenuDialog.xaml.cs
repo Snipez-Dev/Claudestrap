@@ -39,6 +39,11 @@ namespace Claudestrap.UI.Elements.Dialogs
             Closed += (_, _) => viewModel.CancelBackgroundWork();
 
             InitializeComponent();
+            ContentRendered += (_, _) =>
+            {
+                LauncherStartup.FirstWindowReady();
+                App.Logger.WriteLine("Startup", $"Menu rendered in {LauncherStartup.FirstWindowMilliseconds} ms after managed entry; settings ready at {LauncherStartup.SettingsReadyMilliseconds} ms.");
+            };
         }
 
         private void Header_MouseDown(object sender, MouseButtonEventArgs e)

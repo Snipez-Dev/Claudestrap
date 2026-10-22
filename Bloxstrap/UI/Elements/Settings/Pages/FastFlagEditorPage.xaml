@@ -235,6 +235,7 @@
                 </DataGrid.CellStyle>
 
                 <DataGrid.Columns>
+                    <DataGridTextColumn Header="Lokale Freigabe" Binding="{Binding LocalSupport}" IsReadOnly="True" Width="260" />
                     <DataGridTemplateColumn Header="Tags" Width="Auto">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>

@@ -63,6 +63,13 @@ namespace Claudestrap.UI.Elements.Dialogs
         }
 
         public void CloseDialog() => Dispatcher.Invoke(Close);
+        public void SetPercent(int percent) => Dispatcher.Invoke(() =>
+        {
+            Progress.IsIndeterminate = false;
+            Progress.Value = Math.Clamp(percent, 0, 100);
+            PercentText.Text = $"{percent}%";
+            SizeText.Text = "";
+        });
 
         private static string FormatSize(long bytes) => $"{bytes / 1024d / 1024d:0.0} MB";
     }

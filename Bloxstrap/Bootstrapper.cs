@@ -277,10 +277,19 @@ namespace Claudestrap
 
             if (!_noConnection)
             {
-                if (AppData.State.VersionGuid != _latestVersionGuid || _mustUpgrade)
-                    await UpgradeRoblox();
+                if ((AppData.State.VersionGuid != _latestVersionGuid || _mustUpgrade)
+                    && !await UpgradeRoblox())
+                {
+                    Dialog?.CloseBootstrapper();
+                    return;
+                }
 
                 if (_cancelTokenSource.IsCancellationRequested) return;
+
+                if (!File.Exists(Path.Combine(_latestVersionDirectory, AppData.ExecutableName))
+                    && (IsStudioLaunch || !File.Exists(Path.Combine(_latestVersionDirectory, ProcRobloxExe))))
+                    throw new FileNotFoundException("Roblox installation is incomplete. Enable Roblox updates and try again.",
+                        Path.Combine(_latestVersionDirectory, AppData.ExecutableName));
 
                 await ApplyModifications();
                 ApplyLockDefaultIfNeeded(LOG_IDENT);
@@ -570,6 +579,11 @@ namespace Claudestrap
             const string LOG_IDENT = "Bootstrapper::StartRoblox";
             SetStatus("Starting Roblox");
 
+            App.Logger.WriteLine(LOG_IDENT,
+                $"Graphics profile: {GraphicsProfiles.GetEffectiveProfile(App.Settings.Prop.SelectedGraphicsProfile, App.FastFlags.GetValue)?.ToString() ?? "Custom"}; " +
+                $"client stability mode: {App.Settings.Prop.ClientStabilityMode}; " +
+                $"hang diagnostics: {App.Settings.Prop.CaptureHangDiagnostics}");
+
             try
             {
                 await Task.Run(LaunchFleasionIfEnabled, ct);
@@ -741,7 +755,7 @@ namespace Claudestrap
                 RestartMemoryCleanerFromSettings();
                 StartOptimizerIfNeeded();
 
-                if (App.Settings.Prop?.MultiAccount == true)
+                if (App.Settings.Prop?.MultiAccount == true && !App.Settings.Prop.ClientStabilityMode)
                     RobloxMemoryCleaner.CleanAllRobloxMemory();
             }
             catch (Win32Exception ex) when (ex.NativeErrorCode == 1223)
@@ -805,7 +819,7 @@ namespace Claudestrap
 
         private async Task DisableCrashHandlerIfNeeded(string logIdent, CancellationToken ct)
         {
-            if (App.Settings.Prop.DisableCrash != true) return;
+            if (App.Settings.Prop.DisableCrash != true || App.Settings.Prop.ClientStabilityMode) return;
 
             await Task.Delay(800, ct).ConfigureAwait(false);
 
@@ -830,6 +844,7 @@ namespace Claudestrap
         private async Task LaunchWatcherIfNeeded(string logFileName, CancellationToken ct)
         {
             bool needWatcher = (App.Settings?.Prop.EnableActivityTracking ?? false)
+                || (App.Settings?.Prop.CaptureHangDiagnostics ?? false)
                 || App.LaunchSettings.TestModeFlag?.Active == true;
 
             if (!needWatcher) return;
@@ -946,6 +961,12 @@ namespace Claudestrap
             _memoryCleanerTimer?.Stop();
             _memoryCleanerTimer = null;
 
+            if (App.Settings.Prop.ClientStabilityMode)
+            {
+                App.Logger.WriteLine("MemoryCleaner", "Skipped by client stability mode.");
+                return;
+            }
+
             var settings = ClaudestrapRobloxSettingsManager.Load();
             int seconds = settings.MemoryCleanerIntervalSeconds;
 
@@ -981,6 +1002,8 @@ namespace Claudestrap
 
         private void StartOptimizerIfNeeded()
         {
+            if (App.Settings.Prop.ClientStabilityMode) return;
+
             if (App.Settings.Prop?.OptimizeRoblox != true &&
                 App.Settings.Prop?.IsBetterServersEnabled != true) return;
 
@@ -1126,6 +1149,8 @@ namespace Claudestrap
 
         private void StartCpuLimitWatcherIfNeeded()
         {
+            if (App.Settings.Prop.ClientStabilityMode) return;
+
             var priority = App.Settings.Prop?.SelectedCpuPriority;
             if (string.IsNullOrEmpty(priority) ||
                 priority.Equals("Automatic", StringComparison.OrdinalIgnoreCase)) return;
@@ -1187,6 +1212,8 @@ namespace Claudestrap
         private static async Task TryApplyPriorityAsync(
             Process proc, string logIdent, CancellationToken ct)
         {
+            if (App.Settings.Prop.ClientStabilityMode) return;
+
             try
             {
                 await Task.Delay(1100, ct).ConfigureAwait(false);
@@ -1394,7 +1421,7 @@ namespace Claudestrap
                 ct: ct).ConfigureAwait(false);
         }
 
-        private async Task UpgradeRoblox()
+        private async Task<bool> UpgradeRoblox()
         {
             const string LOG_IDENT = "Bootstrapper::UpgradeRoblox";
             var ct = _cancelTokenSource.Token;
@@ -1402,7 +1429,7 @@ namespace Claudestrap
             if (Interlocked.Exchange(ref _isInstalling, 1) == 1)
             {
                 App.Logger.WriteLine(LOG_IDENT, "Upgrade already in progress — skipping.");
-                return;
+                return false;
             }
 
             try
@@ -1412,11 +1439,17 @@ namespace Claudestrap
                     SetStatus(Strings.Bootstrapper_Status_CancelUpgrade);
                     await Task.Delay(250, ct).ConfigureAwait(false);
 
-                    if (!Directory.Exists(_latestVersionDirectory))
+                    if (!File.Exists(AppData.ExecutablePath))
+                    {
                         Frontend.ShowMessageBox(
                             Strings.Bootstrapper_Dialog_NoUpgradeWithoutClient,
                             MessageBoxImage.Warning, MessageBoxButton.OK);
-                    return;
+                        return false;
+                    }
+
+                    _latestVersionGuid = AppData.State.VersionGuid;
+                    _latestVersionDirectory = AppData.Directory;
+                    return true;
                 }
 
                 SetStatus(string.IsNullOrEmpty(AppData.State.VersionGuid)
@@ -1449,7 +1482,7 @@ namespace Claudestrap
                 {
                     Frontend.ShowMessageBox(Strings.Bootstrapper_NotEnoughSpace, MessageBoxImage.Error);
                     App.Terminate(ErrorCode.ERROR_INSTALL_FAILURE);
-                    return;
+                    return false;
                 }
 
                 if (Dialog is not null)
@@ -1513,7 +1546,7 @@ namespace Claudestrap
                 await Task.WhenAll(tasks).ConfigureAwait(false);
                 sw.Stop();
 
-                if (ct.IsCancellationRequested) return;
+                if (ct.IsCancellationRequested) return false;
                 if (failedPackages > 0)
                     throw new Exception($"{failedPackages} package(s) failed during upgrade.");
 
@@ -1535,6 +1568,10 @@ namespace Claudestrap
                 try { MigrateCompatibilityFlags(); }
                 catch (Exception ex)
                 { App.Logger.WriteLine(LOG_IDENT, $"MigrateCompatibilityFlags: {ex.Message}"); }
+
+                if (!File.Exists(Path.Combine(_latestVersionDirectory, AppData.ExecutableName))
+                    && (IsStudioLaunch || !File.Exists(Path.Combine(_latestVersionDirectory, ProcRobloxExe))))
+                    throw new InvalidDataException("Roblox executable is missing after package extraction.");
 
                 AppData.State.VersionGuid = _latestVersionGuid;
                 AppData.State.PackageHashes.Clear();
@@ -1574,10 +1611,12 @@ namespace Claudestrap
                 { App.Logger.WriteLine(LOG_IDENT, $"Register size failed: {ex.Message}"); }
 
                 App.State.Save();
+                return true;
             }
             catch (TaskCanceledException)
             {
                 App.Logger.WriteLine(LOG_IDENT, "Upgrade cancelled.");
+                return false;
             }
             catch (Exception ex)
             {
@@ -1585,6 +1624,7 @@ namespace Claudestrap
                 Frontend.ShowMessageBox(
                     $"{Strings.Bootstrapper_Status_Upgrading} failed:\n{ex.Message}",
                     MessageBoxImage.Error);
+                return false;
             }
             finally
             {

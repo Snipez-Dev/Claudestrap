@@ -232,5 +232,10 @@
                     Visibility="{Binding BuildCommitVisibility, Mode=OneTime}" />
             </Grid>
         </StackPanel>
+        <Expander Header="Lokale Diagnose" Margin="0,16,0,8">
+            <TextBox Text="{Binding Diagnostics, Mode=OneTime}" IsReadOnly="True"
+                     TextWrapping="Wrap" AcceptsReturn="True" MaxHeight="260"
+                     VerticalScrollBarVisibility="Auto" Margin="0,8,0,0" />
+        </Expander>
     </StackPanel>
 </ui:UiPage>

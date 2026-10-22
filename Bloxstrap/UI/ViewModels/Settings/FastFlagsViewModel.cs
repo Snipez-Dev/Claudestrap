@@ -42,6 +42,13 @@ namespace Claudestrap.UI.ViewModels.Settings
     public class FastFlagsViewModel : NotifyPropertyChangedViewModel
     {
         private Dictionary<string, object>? _preResetFlags;
+        private readonly FpsBoostController _fpsBoost;
+
+        public FastFlagsViewModel()
+        {
+            _fpsBoost = new FpsBoostController(App.FastFlags.GetValue, (key, value) => App.FastFlags.SetValue(key, value));
+            _fpsBoost.RestoreState(App.Settings.Prop.FpsBoostOriginalValues ?? new(), App.Settings.Prop.FpsBoostAppliedValues ?? new());
+        }
 
         public event EventHandler? RequestPageReloadEvent;
         public event EventHandler? OpenFlagEditorEvent;
@@ -52,6 +59,48 @@ namespace Claudestrap.UI.ViewModels.Settings
 
         public const string Enabled = "True";
         public const string Disabled = "False";
+
+        public IReadOnlyList<GraphicsProfile> GraphicsProfileOptions { get; } = Enum.GetValues<GraphicsProfile>();
+
+        public GraphicsProfile? SelectedGraphicsProfile
+        {
+            get => GraphicsProfiles.GetEffectiveProfile(App.Settings.Prop.SelectedGraphicsProfile, App.FastFlags.GetValue);
+            set
+            {
+                if (!value.HasValue || !Enum.IsDefined(value.Value)) return;
+
+                foreach (var pair in GraphicsProfiles.GetOverrides(value.Value))
+                    App.FastFlags.SetValue(pair.Key, pair.Value);
+
+                App.Settings.Prop.UseFastFlagManager = true;
+                App.Settings.Prop.SelectedGraphicsProfile = value;
+                OnPropertyChanged(nameof(UseFastFlagManager));
+                OnPropertyChanged(nameof(SelectedGraphicsProfile));
+                OnPropertyChanged(nameof(GraphicsProfileDescription));
+                OnPropertyChanged(nameof(SelectedTextureQuality));
+                OnPropertyChanged(nameof(SelectedMSAALevel));
+                OnPropertyChanged(nameof(MinGrassDistance));
+                OnPropertyChanged(nameof(MaxGrassDistance));
+                OnPropertyChanged(nameof(LowPolyMeshes));
+                OnPropertyChanged(nameof(SelectedFpsBoost));
+            }
+        }
+
+        public string GraphicsProfileDescription => GraphicsProfiles.Describe(SelectedGraphicsProfile);
+        public string FastFlagSupportSummary => FastFlagSupportCatalog.Summary(App.FastFlags.Prop.Keys);
+        public string FastFlagSupportSource => FastFlagSupportCatalog.SourceUrl;
+
+        public bool ClientStabilityMode
+        {
+            get => App.Settings.Prop.ClientStabilityMode;
+            set => App.Settings.Prop.ClientStabilityMode = value;
+        }
+
+        public bool CaptureHangDiagnostics
+        {
+            get => App.Settings.Prop.CaptureHangDiagnostics;
+            set => App.Settings.Prop.CaptureHangDiagnostics = value;
+        }
 
         public bool DisableTelemetry
         {
@@ -237,40 +286,40 @@ namespace Claudestrap.UI.ViewModels.Settings
         }
 
 
-        public bool RamLimitEnabled
+        public bool MemoryCacheBudgetEnabled
         {
             get => App.FastFlags.GetPreset("Memory.MaxRamMB") != null;
             set
             {
                 if (value)
-                    App.FastFlags.SetPreset("Memory.MaxRamMB", (RamLimitMB * 1024).ToString());
+                    App.FastFlags.SetPreset("Memory.MaxRamMB", (MemoryCacheBudgetGB * 1024).ToString());
                 else
                     App.FastFlags.SetPreset("Memory.MaxRamMB", null);
-                OnPropertyChanged(nameof(RamLimitEnabled));
+                OnPropertyChanged(nameof(MemoryCacheBudgetEnabled));
             }
         }
 
-        private int _ramLimitMB = 4;
-        public int RamLimitMB
+        private int _memoryCacheBudgetGB = 4;
+        public int MemoryCacheBudgetGB
         {
             get
             {
                 var raw = App.FastFlags.GetPreset("Memory.MaxRamMB");
                 if (raw != null && int.TryParse(raw, out int mb))
-                    _ramLimitMB = mb / 1024;
-                return _ramLimitMB;
+                    _memoryCacheBudgetGB = Math.Clamp(mb / 1024, 1, 32);
+                return _memoryCacheBudgetGB;
             }
             set
             {
-                _ramLimitMB = value;
-                if (RamLimitEnabled)
-                    App.FastFlags.SetPreset("Memory.MaxRamMB", (value * 1024).ToString());
-                OnPropertyChanged(nameof(RamLimitMB));
-                OnPropertyChanged(nameof(RamLimitLabel));
+                _memoryCacheBudgetGB = Math.Clamp(value, 1, 32);
+                if (MemoryCacheBudgetEnabled)
+                    App.FastFlags.SetPreset("Memory.MaxRamMB", (_memoryCacheBudgetGB * 1024).ToString());
+                OnPropertyChanged(nameof(MemoryCacheBudgetGB));
+                OnPropertyChanged(nameof(MemoryCacheBudgetLabel));
             }
         }
 
-        public string RamLimitLabel => $"{RamLimitMB} GB";
+        public string MemoryCacheBudgetLabel => $"{MemoryCacheBudgetGB} GB Cache-Ziel; kein Limit für den gesamten Prozess";
 
         public bool MoreSensetivityNumbers
         {
@@ -590,6 +639,8 @@ namespace Claudestrap.UI.ViewModels.Settings
                 App.FastFlags.SetPreset("Rendering.LowPolyMeshes2", value ? "0" : null);
                 App.FastFlags.SetPreset("Rendering.LowPolyMeshes3", value ? "0" : null);
                 App.FastFlags.SetPreset("Rendering.LowPolyMeshes4", value ? "0" : null);
+                OnPropertyChanged(nameof(SelectedGraphicsProfile));
+                OnPropertyChanged(nameof(GraphicsProfileDescription));
             }
         }
         public bool CacheSizeImprovement
@@ -606,7 +657,7 @@ namespace Claudestrap.UI.ViewModels.Settings
                 App.FastFlags.SetPreset("Cache.Increase7", value ? "1036372536" : null);
                 App.FastFlags.SetPreset("Cache.Increase8", value ? "1036372536" : null);
                 App.FastFlags.SetPreset("Cache.Increase9", value ? "1036372536" : null);
-                App.FastFlags.SetPreset("Cache.Increase10", value ? "1036372536" : null);
+                // The separate cache-budget control owns this flag.
                 App.FastFlags.SetPreset("Cache.Increase11", value ? "1036372536" : null);
                 App.FastFlags.SetPreset("Cache.Increase12", value ? "1036372536" : null);
                 App.FastFlags.SetPreset("Cache.Increase13", value ? "1036372536" : null);
@@ -676,7 +727,8 @@ namespace Claudestrap.UI.ViewModels.Settings
             {
                 App.FastFlags.SetPreset("Rendering.MSAA1", MSAALevels[value]);
                 App.FastFlags.SetPreset("Rendering.MSAA2", MSAALevels[value]);
-
+                OnPropertyChanged(nameof(SelectedGraphicsProfile));
+                OnPropertyChanged(nameof(GraphicsProfileDescription));
             }
         }
 
@@ -696,6 +748,8 @@ namespace Claudestrap.UI.ViewModels.Settings
                     App.FastFlags.SetPreset("Rendering.TextureQuality.OverrideEnabled", "True");
                     App.FastFlags.SetPreset("Rendering.TextureQuality.Level", TextureQualities[value]);
                 }
+                OnPropertyChanged(nameof(SelectedGraphicsProfile));
+                OnPropertyChanged(nameof(GraphicsProfileDescription));
             }
         }
 
@@ -745,6 +799,8 @@ namespace Claudestrap.UI.ViewModels.Settings
             {
                 App.FastFlags.SetPreset("Rendering.Nograss1", value.ToString());
                 OnPropertyChanged();
+                OnPropertyChanged(nameof(SelectedGraphicsProfile));
+                OnPropertyChanged(nameof(GraphicsProfileDescription));
             }
         }
 
@@ -761,6 +817,8 @@ namespace Claudestrap.UI.ViewModels.Settings
             {
                 App.FastFlags.SetPreset("Rendering.Nograss2", value.ToString());
                 OnPropertyChanged();
+                OnPropertyChanged(nameof(SelectedGraphicsProfile));
+                OnPropertyChanged(nameof(GraphicsProfileDescription));
             }
         }
 
@@ -957,70 +1015,27 @@ namespace Claudestrap.UI.ViewModels.Settings
         /// </summary>
         public IReadOnlyList<string> FpsBoostLevels { get; } = new[] { "Off", "Balanced", "Maximum" };
 
-        // Cheap wins that leave the game looking like the game.
-        private static readonly (string Preset, string Value)[] BalancedBoost =
-        {
-            ("System.GpuCulling", "True"),
-            ("System.CpuCulling", "True"),
-            ("Rendering.AvoidSleep", "True"),
-            ("Rendering.DisablePostFX", "True"),
-            ("Network.MeshPreloadding", "True"),
-        };
-
-        // Balanced plus everything that trades visual fidelity for frames.
-        private static readonly (string Preset, string Value)[] MaximumBoost =
-        {
-            ("Rendering.FRMQualityOverride", "1"),
-            ("Rendering.MSAA1", "0"),
-            ("Rendering.MSAA2", "0"),
-            ("Rendering.ShadowIntensity", "0"),
-            ("Rendering.RemoveGrass1", "0"),
-            ("Rendering.RemoveGrass2", "0"),
-            ("Rendering.RemoveGrass3", "0"),
-        };
-
         public string SelectedFpsBoost
         {
-            get
-            {
-                if (!IsApplied(BalancedBoost))
-                    return "Off";
-
-                return IsApplied(MaximumBoost) ? "Maximum" : "Balanced";
-            }
+            get => _fpsBoost.Detect();
             set
             {
-                bool balanced = value is "Balanced" or "Maximum";
-                bool maximum = value == "Maximum";
-
-                Apply(BalancedBoost, balanced);
-                Apply(MaximumBoost, maximum);
-
-                // Maximum forces voxel lighting; SetPresetEnum clears the other lighting
-                // modes, so leaving it alone on the way back out would strand the user on
-                // voxel with no visible reason why.
-                if (maximum)
-                    App.FastFlags.SetPresetEnum("Rendering.Lighting", "Voxel", "True");
-
+                _fpsBoost.Select(value);
+                App.Settings.Prop.FpsBoostOriginalValues = new(_fpsBoost.PreviousValues);
+                App.Settings.Prop.FpsBoostAppliedValues = new(_fpsBoost.AppliedValues);
                 OnPropertyChanged(nameof(SelectedFpsBoost));
+                OnPropertyChanged(nameof(SelectedGraphicsProfile));
+                OnPropertyChanged(nameof(GraphicsProfileDescription));
                 OnPropertyChanged(nameof(LightCulling));
                 OnPropertyChanged(nameof(DisablePostFX));
                 OnPropertyChanged(nameof(TaskSchedulerAvoidingSleep));
                 OnPropertyChanged(nameof(DisablePlayerShadows));
                 OnPropertyChanged(nameof(SelectedMSAALevel));
                 OnPropertyChanged(nameof(SelectedLightingMode));
+                OnPropertyChanged(nameof(MinGrassDistance));
+                OnPropertyChanged(nameof(MaxGrassDistance));
             }
         }
-
-        private static bool IsApplied((string Preset, string Value)[] set)
-            => set.All(x => App.FastFlags.GetPreset(x.Preset) == x.Value);
-
-        private static void Apply((string Preset, string Value)[] set, bool on)
-        {
-            foreach (var (preset, value) in set)
-                App.FastFlags.SetPreset(preset, on ? value : null);
-        }
-
         public bool DisablePostFX
         {
             get => App.FastFlags.GetPreset("Rendering.DisablePostFX") == "True";

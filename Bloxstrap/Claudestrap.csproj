@@ -4,13 +4,16 @@
 		<DebugType>none</DebugType>
 		<DebugSymbols>false</DebugSymbols>
 		<OutputType>WinExe</OutputType>
-		<TargetFramework>net9.0-windows8.0</TargetFramework>
+		<TargetFramework>net10.0-windows10.0.17763.0</TargetFramework>
 		<Nullable>enable</Nullable>
 		<UseWPF>true</UseWPF>
 		<UseWindowsForms>True</UseWindowsForms>
 		<ApplicationIcon>Claudestrap.ico</ApplicationIcon>
-		<Version>1.2.0</Version>
-		<FileVersion>1.2.0</FileVersion>
+		<Version>1.2.1</Version>
+		<InformationalVersion Condition="'$(ClaudestrapUpdateChannel)' != 'upstream'">1.2.1-local</InformationalVersion>
+		<InformationalVersion Condition="'$(ClaudestrapUpdateChannel)' == 'upstream'">1.2.1</InformationalVersion>
+		<ClaudestrapUpdateChannel Condition="'$(ClaudestrapUpdateChannel)' == ''">local</ClaudestrapUpdateChannel>
+		<FileVersion>1.2.1</FileVersion>
 		<ApplicationManifest>app.manifest</ApplicationManifest>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<RootNamespace>Claudestrap</RootNamespace>
@@ -24,7 +27,7 @@
 		<SelfContained>true</SelfContained>
 		<RuntimeIdentifier>win-x64</RuntimeIdentifier>
 		<IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
-		<IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
+		<IncludeAllContentForSelfExtract>false</IncludeAllContentForSelfExtract>
 		<PublishDir>bin\Release\publish\</PublishDir>
 
 		<!-- Disable satellite assemblies -->
@@ -44,8 +47,8 @@
 		
 		<DebugType>None</DebugType>
 		<DebugSymbols>false</DebugSymbols>
-		<StartupObject></StartupObject>
-		<SupportedOSPlatformVersion>8.0</SupportedOSPlatformVersion>
+		<StartupObject>Claudestrap.Program</StartupObject>
+		<SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -58,6 +61,10 @@
 	
 
 	<ItemGroup>
+		<AssemblyMetadata Include="ClaudestrapUpdateChannel" Value="$(ClaudestrapUpdateChannel)" />
+		<ApplicationDefinition Remove="App.xaml" />
+		<Page Include="App.xaml" />
+		<EmbeddedResource Include="Resources\UpdateDownload.ps1" />
 		<None Remove="Resources\mappings.json" />
 		<None Remove="Claudestrap.png" />
 		<!-- Requires the NLua package which is not currently referenced; nothing else uses this manager. -->
@@ -142,6 +149,7 @@
 	<ItemGroup>
 		<PackageReference Include="AvalonEdit" Version="6.3.1.120" />
 		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+		<PackageReference Include="Velopack" Version="1.2.161" />
 		<PackageReference Include="DiscordRichPresence" Version="1.6.1.70" />
 		<PackageReference Include="Markdig" Version="1.1.1" />
 		<PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.3" />

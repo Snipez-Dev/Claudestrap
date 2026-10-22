@@ -35,10 +35,13 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: "9.0.x"
+          dotnet-version: "10.0.402"
 
       - name: Restore
         run: dotnet restore Claudestrap.sln
+
+      - name: Test
+        run: dotnet test Claudestrap.Tests/Claudestrap.Tests.csproj -c Release --no-restore
 
       - name: Publish
         run: >
@@ -49,4 +52,13 @@ jobs:
           -p:PublishSingleFile=true
           -p:Version=${{ steps.version.outputs.version }}
           -p:FileVersion=${{ steps.version.outputs.version }}
+          -p:InformationalVersion=${{ steps.version.outputs.version }}
+          -p:IncludeSourceRevisionInInformationalVersion=false
+          -p:ClaudestrapUpdateChannel=upstream
           -o publish
+
+      - name: Save release executable
+        uses: actions/upload-artifact@v4
+        with:
+          name: Claudestrap-${{ steps.version.outputs.version }}-win-x64
+          path: publish/Claudestrap.exe

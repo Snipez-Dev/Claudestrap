@@ -29,11 +29,12 @@ namespace Claudestrap.Integrations
                 CleanerOptions.OneWeek => 7,
                 CleanerOptions.OneMonth => 30,
                 CleanerOptions.TwoMonths => 60,
-                CleanerOptions.Never => int.MaxValue,
-                _ => int.MaxValue,
+                _ => 0,
             };
 
-            var Threshold = DateTime.Now.AddHours(-MaxFileAge);
+            var cutoff = CleanerPolicy.CutoffUtc(DateTime.UtcNow, MaxFileAge);
+            if (!cutoff.HasValue) return;
+            var Threshold = cutoff.Value;
 
             foreach (var directory in Directories)
             {
@@ -208,7 +209,7 @@ namespace Claudestrap.Integrations
             if (!File.Exists(file))
                 return false;
 
-            if (File.GetCreationTime(file) > Threshold)
+            if (!CleanerPolicy.IsExpired(File.GetCreationTimeUtc(file), File.GetLastWriteTimeUtc(file), Threshold))
                 return false;
 
             // TODO add more safety checks?

@@ -88,7 +88,7 @@ namespace Claudestrap
 
         public static readonly GBSEditor GlobalSettings = new();
 
-        private CancellationTokenSource? _memoryTrimCts;
+
 
         private static HttpClient? _httpClient;
         public static HttpClient HttpClient => _httpClient ??= new HttpClient(
@@ -333,12 +333,14 @@ namespace Claudestrap
             }
 
             // silently change install location if we detect a portable run
+            if (installLocation is null && PackagedUpdates.IsManaged)
+            {
+                installLocation = PackagedUpdates.DataDirectory;
+                Directory.CreateDirectory(installLocation);
+            }
             if (installLocation is null && Directory.GetParent(Paths.Process)?.FullName is string processDir)
             {
-                var files = Directory.GetFiles(processDir).Select(x => Path.GetFileName(x)).ToArray();
-
-                // check if settings.json and state.json are the only files in the folder
-                if (files.Length <= 3 && files.Contains("Settings.json") && files.Contains("State.json") && files.Contains("DownloadStats.json"))
+                if (RobloxStoragePaths.IsPortableInstallation(processDir))
                 {
                     installLocation = processDir;
                     fixInstallLocation = true;
@@ -436,16 +438,8 @@ namespace Claudestrap
                     System.Runtime.CompilerServices.RuntimeHelpers
                         .RunClassConstructor(typeof(Helpers.SmoothScrollBehavior).TypeHandle);
                 }
-                TrimTimer();
-                var rpcVm = new RPCCustomizerViewModel();
-                if (rpcVm.AutoStartRpc && !string.IsNullOrWhiteSpace(rpcVm.ApplicationId))
-                {
-                    rpcVm.GetType()
-                         .GetMethod("SafeStartRpc", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?
-                         .Invoke(rpcVm, null);
-                }
-                Current.Resources["RPCCustomizerVM"] = rpcVm;
-
+                LauncherStartup.SettingsReady();
+                Dispatcher.BeginInvoke(DispatcherPriority.ContextIdle, new Action(InitializeOptionalIntegrations));
                 if (Settings?.Prop?.WPFSoftwareRender == true)
                 {
                     HardwareAcceleration.DisableAllAnimations();
@@ -467,52 +461,28 @@ namespace Claudestrap
                     Installer.HandleUpgrade();
 
                 WindowsRegistry.RegisterApis();
+                if (LaunchSettings.UpdateReadyFlag.Active)
+                    await UpdateHandoff.ConfirmAndWaitAsync(LaunchSettings.UpdateReadyFlag.Data ?? "", LaunchSettings.UpdateParentFlag.Data ?? "");
                 await LaunchHandler.ProcessLaunchArgs();
             }
         }
 
-        private void TrimTimer()
+        private void InitializeOptionalIntegrations()
         {
-            _memoryTrimCts = new CancellationTokenSource();
-            CancellationToken token = _memoryTrimCts.Token;
-
-            int trimPasses = 0;
-
-            Task.Run(async () =>
-            {
-                while (!token.IsCancellationRequested)
+            if (LaunchSettings.MultiInstanceHolderFlag.Active || LaunchSettings.WatcherFlag.Active) return;
+            try
+            {                var rpcVm = new RPCCustomizerViewModel();
+                if (rpcVm.AutoStartRpc && !string.IsNullOrWhiteSpace(rpcVm.ApplicationId))
                 {
-                    try
-                    {
-                        if (DiscordClient != null)
-                        {
-                            // Was three blocking collections plus a large-object-heap
-                            // compaction every five seconds. That pauses every thread each
-                            // time, which is a steady CPU tax and shows up as stutter, and
-                            // it reclaims almost nothing on a five second old heap. One
-                            // background collection, and the heap only gets compacted on
-                            // every sixth pass -- roughly once a minute.
-                            GC.Collect(GC.MaxGeneration, GCCollectionMode.Optimized, blocking: false);
-
-                            if (++trimPasses % 6 == 0)
-                            {
-                                System.Runtime.GCSettings.LargeObjectHeapCompactionMode =
-                                    System.Runtime.GCLargeObjectHeapCompactionMode.CompactOnce;
-                                GC.Collect(GC.MaxGeneration, GCCollectionMode.Optimized, blocking: false);
-                                Logger.WriteLine("App::MemoryTrim", "Heap compacted (background).");
-                            }
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Logger.WriteException("App::MemoryTrim", ex);
-                    }
-
-                    await Task.Delay(TimeSpan.FromSeconds(10), token);
+                    rpcVm.GetType()
+                         .GetMethod("SafeStartRpc", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?
+                         .Invoke(rpcVm, null);
                 }
-            }, token);
-        }
+                Current.Resources["RPCCustomizerVM"] = rpcVm;
 
+            }
+            catch (Exception ex) { Logger.WriteException("App::OptionalIntegrations", ex); }
+        }
         protected override void OnExit(ExitEventArgs e)
         {
             try

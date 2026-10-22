@@ -213,18 +213,8 @@ namespace Claudestrap.UI.Elements.Settings.Pages
 
         private void UpdateCrashRate()
         {
-            int itemCount = DataGrid.Items.Count;
-            double crashRatePerItem = 3.0 / 15.0;
-            double crashRate = itemCount * crashRatePerItem;
-            crashRate = Math.Min(crashRate, 100);
-
-            string formattedCrashRate = crashRate % 1 == 0
-                ? crashRate.ToString("0")
-                : crashRate.ToString("0.##");
-
-            CrashRateTextBlock.Text = $"Bloat: {formattedCrashRate}%";
+            CrashRateTextBlock.Text = FastFlagSupportCatalog.Summary(App.FastFlags.Prop.Keys);
         }
-
         public class FlagHistoryEntry
         {
             public string FlagName { get; set; }

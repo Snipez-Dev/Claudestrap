@@ -24,6 +24,16 @@ namespace Claudestrap.UI.ViewModels.Settings
 {
     public class ChannelViewModel : INotifyPropertyChanged
     {
+        public string PackageUpdateSource
+        {
+            get => App.Settings.Prop.PackageUpdateSource;
+            set => App.Settings.Prop.PackageUpdateSource = value.Trim();
+        }
+        public string PackageUpdateChannel
+        {
+            get => App.Settings.Prop.PackageUpdateChannel;
+            set => App.Settings.Prop.PackageUpdateChannel = value.Trim();
+        }
         [StructLayout(LayoutKind.Sequential)]
         private struct DEVMODE
         {

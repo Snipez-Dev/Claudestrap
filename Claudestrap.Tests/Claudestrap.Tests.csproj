@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2">
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <Using Include="Claudestrap.Enums" />
+    <Using Include="Xunit" />
+    <Compile Include="..\Bloxstrap\Enums\GraphicsProfile.cs" Link="Source\GraphicsProfile.cs" />
+    <Compile Include="..\Bloxstrap\Utility\GraphicsProfiles.cs" Link="Source\GraphicsProfiles.cs" />
+    <Compile Include="..\Bloxstrap\Utility\HangDetectionState.cs" Link="Source\HangDetectionState.cs" />
+    <Compile Include="..\Bloxstrap\Utility\RobloxStoragePaths.cs" Link="Source\RobloxStoragePaths.cs" />
+    <Compile Include="..\Bloxstrap\Utility\UpdateBackupPaths.cs" Link="Source\UpdateBackupPaths.cs" />
+    <Compile Include="..\Bloxstrap\Utility\AtomicJsonFile.cs" Link="Source\AtomicJsonFile.cs" />
+    <Compile Include="..\Bloxstrap\Utility\CleanerPolicy.cs" Link="Source\CleanerPolicy.cs" />
+    <Compile Include="..\Bloxstrap\Utility\LogFileNames.cs" Link="Source\LogFileNames.cs" />
+    <Compile Include="..\Bloxstrap\Utility\UpdateBuildPolicy.cs" Link="Source\UpdateBuildPolicy.cs" />
+    <Compile Include="..\Bloxstrap\Utility\FpsBoostController.cs" Link="Source\FpsBoostController.cs" />
+    <Compile Include="..\Bloxstrap\Utility\VerifiedUpdateDownload.cs" Link="Source\VerifiedUpdateDownload.cs" />
+    <Compile Include="..\Bloxstrap\Utility\ExecutableUpdate.cs" Link="Source\ExecutableUpdate.cs" />
+    <Compile Include="..\Bloxstrap\Utility\UpdateHandoff.cs" Link="Source\UpdateHandoff.cs" />
+    <Compile Include="..\Bloxstrap\Utility\FastFlagSupportCatalog.cs" Link="Source\FastFlagSupportCatalog.cs" />
+    <Compile Include="..\Bloxstrap\Utility\RestartArguments.cs" Link="Source\RestartArguments.cs" />
+    <Compile Include="..\Bloxstrap\Utility\PersistentUpdateDownload.cs" Link="Source\PersistentUpdateDownload.cs" />
+    <EmbeddedResource Include="..\Bloxstrap\Resources\UpdateDownload.ps1" LogicalName="Claudestrap.Resources.UpdateDownload.ps1" />
+  </ItemGroup>
+</Project>

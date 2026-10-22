@@ -184,8 +184,7 @@ namespace Claudestrap.Integrations
             if (!await _updateLock.WaitAsync(0)) return;
             try
             {
-                bool changed = await SetCurrentGame();
-                if (changed) RobloxMemoryCleaner.CleanRobloxMemory();
+                await SetCurrentGame();
             }
             finally
             {
@@ -474,26 +473,4 @@ namespace Claudestrap.Integrations
         }
     }
 
-    public static class RobloxMemoryCleaner
-    {
-        public static void CleanRobloxMemory()
-        {
-            var robloxProcesses = Process.GetProcessesByName("Roblox")
-                .Concat(Process.GetProcessesByName("RobloxPlayerBeta"));
-
-            foreach (var proc in robloxProcesses)
-            {
-                try
-                {
-                    proc.Refresh();
-                    if (!proc.HasExited)
-                        EmptyWorkingSet(proc.Handle);
-                }
-                catch { }
-            }
-        }
-
-        [System.Runtime.InteropServices.DllImport("psapi.dll")]
-        private static extern bool EmptyWorkingSet(IntPtr hProcess);
-    }
 }

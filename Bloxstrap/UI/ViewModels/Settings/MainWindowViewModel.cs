@@ -72,8 +72,11 @@ namespace Claudestrap.UI.ViewModels.Settings
             const string LOG_IDENT = "MainWindowViewModel::SaveSettings";
 
             App.Settings.Save();
+            if (!App.Settings.LastSaveSucceeded) return;
             App.State.Save();
+            if (!App.State.LastSaveSucceeded) return;
             App.FastFlags.Save();
+            if (!App.FastFlags.LastSaveSucceeded) return;
 
             foreach (var pair in App.PendingSettingTasks)
             {
@@ -94,6 +97,7 @@ namespace Claudestrap.UI.ViewModels.Settings
         public void SaveAndLaunchSettings()
         {
             SaveSettings();
+            if (!App.Settings.LastSaveSucceeded || !App.State.LastSaveSucceeded || !App.FastFlags.LastSaveSucceeded) return;
             RequestSaveLaunchNoticeEvent?.Invoke(this, EventArgs.Empty);
             LaunchHandler.LaunchRoblox(LaunchMode.Player);
         }

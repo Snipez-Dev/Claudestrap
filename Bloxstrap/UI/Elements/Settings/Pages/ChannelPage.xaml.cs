@@ -207,7 +207,7 @@ namespace Claudestrap.UI.Elements.Settings.Pages
 
                 case UpdateCheckResult.NotUpdatable:
                     Frontend.ShowMessageBox(
-                        "A newer version is available, but this copy of Claudestrap is a development build and can't update itself. Rebuild it, or run the installed version instead.",
+                        "A newer upstream version is available. " + GithubUpdater.UpdateUnavailableReason,
                         MessageBoxImage.Information);
                     break;
 

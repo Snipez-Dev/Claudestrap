@@ -125,7 +125,7 @@ file from `%LOCALAPPDATA%\Claudestrap\Logs`.
 
 ## Building from source
 
-You need the **.NET 9 SDK** and **Windows** — this is a WPF app and won't build on
+You need the **.NET 10 SDK** selected by `global.json` and **Windows** — this is a WPF app and won't build on
 other platforms.
 
 ```sh
@@ -142,6 +142,12 @@ To produce the same single-file build the releases ship:
 ```sh
 dotnet publish Bloxstrap/Claudestrap.csproj -c Release -r win-x64 --self-contained -p:PublishSingleFile=true -o publish
 ```
+
+Local build helpers use `R:\Entwicklung\Dependencies` by default. Run
+`scripts/build.ps1 -Mode Test` or `scripts/build.ps1 -Mode Publish`, with
+`-Dependencies` to select another toolchain directory. Package builds, persistent
+downloads and startup changes are documented in
+[`docs/net10-and-update-methods.md`](docs/net10-and-update-methods.md).
 
 ## License
 

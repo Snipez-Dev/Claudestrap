@@ -790,7 +790,7 @@ public static IReadOnlyDictionary<RefreshRate, string?> RefreshRates => new Dict
             base.Save();
 
             // clone the dictionary
-            OriginalProp = new(Prop);
+            if (LastSaveSucceeded) OriginalProp = new(Prop);
         }
 
         public override void Load(bool alertFailure = false)

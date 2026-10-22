@@ -19,6 +19,8 @@ namespace Claudestrap.Models.Persistable
         public Theme Theme2 { get; set; } = Theme.Dark;
         public string? SelectedCustomTheme { get; set; } = null;
         public bool CheckForUpdates { get; set; } = true;
+        public string PackageUpdateSource { get; set; } = "";
+        public string PackageUpdateChannel { get; set; } = "local";
         public string SelectedCpuPriority { get; set; } = "Automatic";
         public int MaxCpuCores { get; set; } = Environment.ProcessorCount;
         public int TotalLogicalCores { get; set; } = Environment.ProcessorCount;
@@ -28,6 +30,11 @@ namespace Claudestrap.Models.Persistable
 
         public int CleanRobloxNumber = 0;
         public bool DisableCrash { get; set; } = false;
+        public GraphicsProfile? SelectedGraphicsProfile { get; set; }
+        public Dictionary<string, string?> FpsBoostOriginalValues { get; set; } = new();
+        public Dictionary<string, string?> FpsBoostAppliedValues { get; set; } = new();
+        public bool ClientStabilityMode { get; set; } = true;
+        public bool CaptureHangDiagnostics { get; set; } = false;
         public int CpuCoreLimit { get; set; } = Environment.ProcessorCount;
         public string ShiftlockCursorSelectedPath { get; set; } = "";
         public string UseCustomIcon { get; set; } = "";
