@@ -5,6 +5,7 @@ using System.Windows.Shell;
 using Claudestrap.UI.ViewModels.Bootstrapper;
 using Claudestrap.UI.Elements.Bootstrapper.Base;
 using System.Windows;
+using Claudestrap.Utility;
 
 namespace Claudestrap.UI.Elements.Bootstrapper
 {
@@ -125,6 +126,26 @@ namespace Claudestrap.UI.Elements.Bootstrapper
         {
             if (!_isClosing)
                 Bootstrapper?.Cancel();
+        }
+
+        private void Header_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            if (e.ChangedButton != System.Windows.Input.MouseButton.Left) return;
+            if (e.LeftButton != System.Windows.Input.MouseButtonState.Pressed) return;
+
+            WindowDrag.Begin(this);
+        }
+
+        private void Minimize_Click(object sender, RoutedEventArgs e)
+        {
+            WindowState = System.Windows.WindowState.Minimized;
+        }
+
+        private void Close_Click(object sender, RoutedEventArgs e)
+        {
+            Bootstrapper?.Cancel();
+            _isClosing = true;
+            Close();
         }
 
         #region IBootstrapperDialog Methods

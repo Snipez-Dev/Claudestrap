@@ -5,63 +5,209 @@
     xmlns:base="clr-namespace:Claudestrap.UI.Elements.Base"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:po="http://schemas.microsoft.com/winfx/2006/xaml/presentation/options"
     xmlns:resources="clr-namespace:Claudestrap.Resources"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
     xmlns:vms="clr-namespace:Claudestrap.UI.ViewModels.Bootstrapper"
-    Width="420"
-    Height="190"
+    Title="Claudestrap"
+    Width="600"
+    Height="340"
+    MinWidth="0"
     MinHeight="0"
-    Background="{ui:ThemeResource ApplicationBackgroundBrush}"
-    Closing="UiWindow_Closing"
+    AllowsTransparency="True"
+    Background="Transparent"
     ExtendsContentIntoTitleBar="True"
     ResizeMode="NoResize"
-    WindowBackdropType="Mica"
+    WindowStyle="None"
     WindowStartupLocation="CenterScreen"
-    mc:Ignorable="d">
+    Closing="UiWindow_Closing"
+    TextOptions.TextFormattingMode="Display"
+    TextOptions.TextRenderingMode="ClearType"
+    FontFamily="Poppins, Inter, Segoe UI"
+    mc:Ignorable="d"
+    d:DataContext="{d:DesignInstance vms:ClassicFluentDialogViewModel, IsDesignTimeCreatable=True}">
 
     <Window.TaskbarItemInfo>
-        <TaskbarItemInfo ProgressState="{Binding Path=TaskbarProgressState}" ProgressValue="{Binding Path=TaskbarProgressValue}" />
+        <TaskbarItemInfo
+            ProgressState="{Binding TaskbarProgressState}"
+            ProgressValue="{Binding TaskbarProgressValue}" />
     </Window.TaskbarItemInfo>
 
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-            <RowDefinition Height="Auto" />
-        </Grid.RowDefinitions>
+    <Window.Resources>
+        <!-- ============ Palette (cool indigo-tinted dark, matches the Glass dialog) ============ -->
+        <SolidColorBrush x:Key="WindowBg"         po:Freeze="True" Color="#0B0C11" />
+        <SolidColorBrush x:Key="BackgroundBase"   po:Freeze="True" Color="#0F1015" />
+        <SolidColorBrush x:Key="TextPrimary"      po:Freeze="True" Color="#ECEBF5" />
+        <SolidColorBrush x:Key="TextSecondary"    po:Freeze="True" Color="#C2C2D6" />
+        <SolidColorBrush x:Key="TextDescription"  po:Freeze="True" Color="#6C6C82" />
+        <SolidColorBrush x:Key="IconColor"        po:Freeze="True" Color="#7C7D93" />
+        <SolidColorBrush x:Key="IconHover"        po:Freeze="True" Color="#C9C9DF" />
+        <SolidColorBrush x:Key="ButtonBase"       po:Freeze="True" Color="#4A3FC4" />
+        <SolidColorBrush x:Key="ButtonHover"      po:Freeze="True" Color="#5B4FE0" />
+        <SolidColorBrush x:Key="ButtonText"       po:Freeze="True" Color="#F2F1FB" />
+        <SolidColorBrush x:Key="ButtonDisabled"   po:Freeze="True" Color="#2A2B3A" />
+        <SolidColorBrush x:Key="BorderSubtle"     po:Freeze="True" Color="#1E6C63F0" />
 
-        <ui:TitleBar Grid.Row="0" x:Name="RootTitleBar" Padding="8" Title="{Binding Title, Mode=OneTime}" ShowMinimize="False" ShowMaximize="False" CanMaximize="False" ShowClose="False" />
+        <SolidColorBrush x:Key="ProgressTrack"    po:Freeze="True" Color="#1B1C29" />
 
-        <ui:TitleBar
-            Grid.Row="0"
-            VerticalAlignment="Top"
-            CanMaximize="False"
-            ShowClose="False"
-            ShowMaximize="False"
-            ShowMinimize="False" />
+        <!-- ============ Background glow (same spotlight treatment as the Glass dialog) ============ -->
+        <RadialGradientBrush x:Key="BackgroundGlow" po:Freeze="True"
+                              Center="0.82,0.05" GradientOrigin="0.82,0.05"
+                              RadiusX="0.85" RadiusY="1.05">
+            <GradientStop Offset="0"    Color="#3D6C63F0" />
+            <GradientStop Offset="0.55" Color="#146C63F0" />
+            <GradientStop Offset="1"    Color="#006C63F0" />
+        </RadialGradientBrush>
 
-        <Grid Grid.Row="1" Margin="16,0,16,0" VerticalAlignment="Center">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
-            <Image Grid.Column="0" Margin="0,12,0,0" Width="48" Height="48" VerticalAlignment="Top" Source="{Binding Icon, Mode=OneWay}" RenderOptions.BitmapScalingMode="HighQuality" />
-            <StackPanel Grid.Column="1">
-                <TextBlock Margin="16,8,0,0" FontSize="20" Text="{Binding Message, Mode=OneWay}" TextWrapping="Wrap" Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
-                <ui:ProgressBar Margin="16,16,0,16" Height="8"
-                                CornerRadius="6"
-                                IndicatorCornerRadius="6"
-                                IsIndeterminate="{Binding ProgressIndeterminate, Mode=OneWay}"
-                                Maximum="{Binding ProgressMaximum, Mode=OneWay}"
-                                Value="{Binding ProgressValue, Mode=OneWay}" />
-            </StackPanel>
+        <!-- ============ Progress bar fill (indigo-tinted) ============ -->
+        <LinearGradientBrush x:Key="ProgressFill" po:Freeze="True" StartPoint="0,0.5" EndPoint="1,0.5">
+            <GradientStop Offset="0.00" Color="#6C5FE0" />
+            <GradientStop Offset="0.25" Color="#8B80FF" />
+            <GradientStop Offset="0.50" Color="#ADA4FF" />
+            <GradientStop Offset="0.75" Color="#8B80FF" />
+            <GradientStop Offset="1.00" Color="#6C5FE0" />
+        </LinearGradientBrush>
+
+        <!-- ============ Titlebar icon button (Min/Close) ============ -->
+        <Style x:Key="TitleIconStyle" TargetType="Button">
+            <Setter Property="Foreground" Value="{StaticResource IconColor}" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Width" Value="24" />
+            <Setter Property="Height" Value="24" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}" CornerRadius="4">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Foreground" Value="{StaticResource IconHover}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- ============ Slim progress bar (rounded) ============ -->
+        <Style x:Key="SlimProgressStyle" TargetType="{x:Type ui:ProgressBar}">
+            <Setter Property="Background" Value="{StaticResource ProgressTrack}" />
+            <Setter Property="Foreground" Value="{StaticResource ProgressFill}" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Height" Value="8" />
+            <Setter Property="CornerRadius" Value="4" />
+        </Style>
+
+        <!-- ============ Cancel button ============ -->
+        <Style x:Key="CancelButtonStyle" TargetType="Button">
+            <Setter Property="Foreground" Value="{StaticResource ButtonText}" />
+            <Setter Property="Background" Value="{StaticResource ButtonBase}" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Width" Value="120" />
+            <Setter Property="Height" Value="32" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="6">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="{StaticResource ButtonHover}" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Background" Value="{StaticResource ButtonDisabled}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Border Background="{StaticResource BackgroundBase}"
+            CornerRadius="12"
+            SnapsToDevicePixels="True"
+            BorderBrush="{StaticResource BorderSubtle}"
+            BorderThickness="1">
+
+        <Grid MouseDown="Header_MouseDown" Background="Transparent">
+            <Border Background="{StaticResource BackgroundGlow}"
+                    CornerRadius="12"
+                    IsHitTestVisible="False" />
+
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="44" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <!-- =============== TOP BAR (edge-to-edge) =============== -->
+                <Grid Grid.Row="0" Background="Transparent">
+                    <StackPanel HorizontalAlignment="Left" VerticalAlignment="Center"
+                                Orientation="Horizontal" Margin="14,0,0,0">
+                        <Image Width="16" Height="16"
+                               Source="{Binding Icon, Mode=OneWay}"
+                               RenderOptions.BitmapScalingMode="LowQuality"
+                               Stretch="Uniform" />
+                        <TextBlock Margin="8,0,0,0"
+                                   VerticalAlignment="Center"
+                                   FontSize="12"
+                                   FontWeight="SemiBold"
+                                   Foreground="{StaticResource TextPrimary}"
+                                   Text="Claudestrap" />
+                    </StackPanel>
+
+                    <StackPanel HorizontalAlignment="Right" VerticalAlignment="Center"
+                                Orientation="Horizontal" Margin="0,0,10,0">
+                        <Button Style="{StaticResource TitleIconStyle}" Click="Minimize_Click">
+                            <ui:SymbolIcon Symbol="Subtract24" FontSize="12"
+                                           Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
+                        </Button>
+                        <Button Style="{StaticResource TitleIconStyle}" Margin="14,0,0,0"
+                                Click="Close_Click">
+                            <ui:SymbolIcon Symbol="Dismiss24" FontSize="12"
+                                           Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
+                        </Button>
+                    </StackPanel>
+                </Grid>
+
+                <!-- =============== CENTER =============== -->
+                <StackPanel Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center">
+
+                    <TextBlock HorizontalAlignment="Center"
+                               FontSize="18"
+                               FontWeight="SemiBold"
+                               Foreground="{StaticResource TextSecondary}"
+                               Text="{Binding Message, Mode=OneWay}"
+                               TextWrapping="Wrap"
+                               TextAlignment="Center"
+                               MaxWidth="520" />
+
+                    <ui:ProgressBar Style="{StaticResource SlimProgressStyle}"
+                                    Margin="0,26,0,0"
+                                    Width="360"
+                                    IsIndeterminate="{Binding ProgressIndeterminate, Mode=OneWay}"
+                                    Maximum="{Binding ProgressMaximum, Mode=OneWay}"
+                                    Value="{Binding ProgressValue, Mode=OneWay}" />
+                </StackPanel>
+
+                <!-- =============== BOTTOM RIGHT : cancel (edge-to-edge) =============== -->
+                <StackPanel Grid.Row="2" Orientation="Horizontal"
+                            HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                            Margin="0,0,12,12"
+                            Visibility="{Binding CancelButtonVisibility, Mode=OneWay}">
+                    <Button Style="{StaticResource CancelButtonStyle}"
+                            Content="{x:Static resources:Strings.Common_Cancel}"
+                            IsEnabled="{Binding CancelEnabled, Mode=OneWay}"
+                            Command="{Binding CancelInstallCommand}" />
+                </StackPanel>
+            </Grid>
         </Grid>
-
-        <Border Grid.Row="2" Padding="15">
-            <Border.Background>
-                <SolidColorBrush Color="{ui:ThemeResource SolidBackgroundFillColorSecondary}" Opacity="{Binding FooterOpacity, Mode=OneTime}" />
-            </Border.Background>
-            <Button Margin="0" Content="{x:Static resources:Strings.Common_Cancel}" Width="120" HorizontalAlignment="Right" IsEnabled="{Binding CancelEnabled, Mode=OneWay}" Command="{Binding CancelInstallCommand}" />
-        </Border>
-    </Grid>
+    </Border>
 </base:WpfUiWindow>
